@@ -201,7 +201,7 @@ def jacobian(sim, x, dx=None, *args, **kwargs):
 
     # Parameters
     nu = sim.gas.nu * sim.dust.backreaction.A
-    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK
+    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK + sim.gas.v.wind
 
     # Helper variables for convenience
     if dx is None:
@@ -393,6 +393,25 @@ def nu(sim):
         sim.gas.Hp
     )
 
+def nu_dw(sim):
+    """Function calculates the wind-equivalent viscocity of the gas.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    nu_dw : Field
+        wind viscosity"""
+
+    return gas_f.viscosity_dw(
+        sim.gas.alpha_dw,
+        sim.gas.cs,
+        sim.gas.Hp
+    )
+
 
 def P_midplane(sim):
     """Function calculates the midplane gas pressure.
@@ -501,9 +520,24 @@ def vrad(sim):
         sim.gas.eta,
         sim.grid.OmegaK,
         sim.grid.r,
-        sim.gas.v.visc
+        sim.gas.v.visc,
+        sim.gas.v.wind
     )
 
+def vwind(sim):
+    """Function calculates the radial gas velocity driven by MHD winds.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    vwind : Field
+         Radial gas velocity driven by MHD winds"""
+    return gas_f.v_wind(sim.gas.nu_dw, sim.grid.r, sim.grid.ri)
+    
 
 def vvisc(sim):
     """Function calculates the viscous radial gas velocity.

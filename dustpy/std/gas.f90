@@ -601,7 +601,7 @@ subroutine timestep(S, Sigma, SigmaFloor, dt, Nr)
 end subroutine timestep
 
 
-subroutine v_rad(A, B, eta, OmegaK, r, vv, v, Nr)
+subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, v, Nr)
    ! Function calculates the radial gas velocity.
    !
    ! Parameters
@@ -626,15 +626,55 @@ subroutine v_rad(A, B, eta, OmegaK, r, vv, v, Nr)
    double precision, intent(in)  :: OmegaK(Nr)
    double precision, intent(in)  :: r(Nr)
    double precision, intent(in)  :: vv(Nr)
+   double precision, intent(in)  :: vw(Nr)
    double precision, intent(out) :: v(Nr)
    integer,          intent(in)  :: Nr
 
    double precision :: vb(Nr)
 
    vb(:) = 2.d0 * eta(:) * r(:) * OmegaK(:)
-   v(:) = A(:)*vv(:) + B(:)*vb(:)
+   v(:) = A(:)*vv(:) + B(:)*vb(:) + vw(:)
 
 end subroutine v_rad
+
+subroutine v_wind(nu_dw, r, ri, vwind, Nr)
+   ! Function calculates the radial wind velocity.
+   ! Mass flux is linearly interpolated on grid cell interfaces.
+   !
+   ! Parameters
+   ! ----------
+   ! nu_dw(Nr) : MHD wind-equvalent viscosity
+   ! r(Nr) : Radial grid cell centers
+   ! ri(Nr+1) : Radial grid cell interfaces
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! vwind(Nr) : Radial wind velocity
+
+   implicit none
+
+   double precision, intent(in)  :: nu_dw(Nr)
+   double precision, intent(in)  :: r(Nr)
+   double precision, intent(in)  :: ri(Nr+1)
+   double precision, intent(out) :: vwind(Nr)
+   integer,          intent(in)  :: Nr
+
+   double precision :: arg(Nr)
+   double precision :: argi(Nr+1)
+
+   integer :: ir
+
+   arg(:) = 1.5d0 * nu_dw(:) / r(:) !3/2
+   call interp1d(ri, r, arg, argi, Nr)
+
+
+   vwind(:)  = argi(1:Nr)
+   !BC for vvisc: constant slope; we didn't impose any BC for MHD winds!
+
+end subroutine v_wind
+
+
 
 
 subroutine v_visc(Sigma, nu, r, ri, vvisc, Nr)
@@ -707,3 +747,30 @@ subroutine viscosity(alpha, cs, Hp, nu, Nr)
    nu(:) = alpha(:) * cs(:) * Hp(:)
 
 end subroutine viscosity
+
+
+subroutine viscosity_dw(alpha_dw, cs, Hp, nu_dw, Nr)
+   ! Subroutine calculates the kinematic viscosity.
+   !
+   ! Parameters
+   ! ----------
+   ! alpha(Nr) : Alpha viscosity parameter
+   ! cs(Nr) : sound speed
+   ! Hp(Nr) : Gas scale height
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! nu : Kinematic viscosity
+
+   implicit none
+
+   double precision, intent(in)  :: alpha_dw(Nr)
+   double precision, intent(in)  :: cs(Nr)
+   double precision, intent(in)  :: Hp(Nr)
+   double precision, intent(out) :: nu_dw(Nr)
+   integer,          intent(in)  :: Nr
+
+   nu_dw(:) = alpha_dw(:) * cs(:) * Hp(:)
+
+end subroutine viscosity_dw

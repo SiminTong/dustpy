@@ -758,7 +758,7 @@ class Simulation(Frame):
             self.gas.v.visc.updater = std.gas.vvisc
         # Wind velocity
         if self.gas.v.wind is None:
-            self.gas.v.wind = Field(self, np.zeros(shape1,
+            self.gas.v.wind = Field(self, np.zeros(shape1),
                                     description = "MHD wind velocity [cm/s]"))
             self.gas.v.wind.updater = std.gas.vwind
         #TODO: write std.gas.vwind

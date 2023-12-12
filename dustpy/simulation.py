@@ -175,7 +175,7 @@ class Simulation(Frame):
         self.gas.v.visc = None
         self.gas.v.wind = None
         self.gas.v.updater = ["wind", "visc", "rad"]
-        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "cs", "Hp", "nu", "nu_dw"
+        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "cs", "Hp", "nu", "nu_dw",
                             "rho", "n", "mfp", "P", "eta", "S"]
 
         # Grid quantities

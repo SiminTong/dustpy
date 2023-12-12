@@ -665,7 +665,7 @@ subroutine v_wind(nu_dw, r, ri, vwind, Nr)
 
    integer :: ir
 
-   arg(:) = 1.5d0 * nu_dw(:) / r(:) !3/2
+   arg(:) = -1.5d0 * nu_dw(:) / r(:) !3/2
    call interp1d(ri, r, arg, argi, Nr)
 
 

@@ -759,7 +759,7 @@ class Simulation(Frame):
         # Wind velocity
         if self.gas.v.wind is None:
             self.gas.v.wind = Field(self, np.zeros(shape1),
-                                    description = "MHD wind velocity [cm/s]"))
+                                    description = "MHD wind velocity [cm/s]")
             self.gas.v.wind.updater = std.gas.vwind
         #TODO: write std.gas.vwind
         # Radial gas velocity

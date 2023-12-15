@@ -211,7 +211,7 @@ subroutine implicit_boundaries(dt, Fi, ri, Sigma, SigmaOld, ret, Nr)
 end subroutine implicit_boundaries
 
 
-subroutine jac_abc(area, nu, r, ri, v, A, B, C, Nr)
+subroutine jac_abc(area, nu, r, ri, v, wind_ext, A, B, C, Nr)
    ! Subroutine calculates the diagonals of the gas Jacobian for advection.
    !
    ! Parameters
@@ -238,6 +238,7 @@ subroutine jac_abc(area, nu, r, ri, v, A, B, C, Nr)
    double precision, intent(in)  :: r(Nr)
    double precision, intent(in)  :: ri(Nr+1)
    double precision, intent(in)  :: v(Nr)
+   double precision, intent(in)  :: wind_ext(Nr)
    double precision, intent(out) :: A(Nr)
    double precision, intent(out) :: B(Nr)
    double precision, intent(out) :: C(Nr)
@@ -281,6 +282,7 @@ subroutine jac_abc(area, nu, r, ri, v, A, B, C, Nr)
       A(ir) = A(ir) + Di(ir)   * g(ir-1) / w(ir-1) * r(ir-1)
       B(ir) = B(ir) - Di(ir)   * g(ir)   / w(ir-1) * r(ir)
       B(ir) = B(ir) - Di(ir+1) * g(ir)   / w(ir)   * r(ir)
+      B(ir) = B(ir) + wind_ext(ir)
       C(ir) = C(ir) + Di(ir+1) * g(ir+1) / w(ir)   * r(ir+1)
 
    end do

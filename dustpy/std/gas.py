@@ -202,7 +202,7 @@ def jacobian(sim, x, dx=None, *args, **kwargs):
     # Parameters
     nu = sim.gas.nu * sim.dust.backreaction.A
     v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK + sim.gas.v.wind
-
+    wind_ext = -3./4./(sim.gas.leverarm-1)/sim.grid.r**2 * sim.gas.nu_dw
     # Helper variables for convenience
     if dx is None:
         dt = x.stepsize
@@ -214,7 +214,7 @@ def jacobian(sim, x, dx=None, *args, **kwargs):
     Nr = int(sim.grid.Nr)
 
     # Construct Jacobian
-    A, B, C = gas_f.jac_abc(area, nu, r, ri, v)
+    A, B, C = gas_f.jac_abc(area, nu, r, ri, v, wind_ext)
     row_hyd = np.hstack(
         (np.arange(Nr-1)+1, np.arange(Nr), np.arange(Nr-1)))
     col_hyd = np.hstack(

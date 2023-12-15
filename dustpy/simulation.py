@@ -50,12 +50,13 @@ class Simulation(Frame):
                                                                   }
                                                                ),
                                        "gas": SimpleNamespace(**{"alpha": 1.e-3,
-                                                                 "alpha_dw": 0,
+                                                                 "alpha_dw": 0.,
                                                                  "gamma": 1.4,
                                                                  "Mdisk": 0.05*c.M_sun,
                                                                  "mu": 2.3*c.m_p,
                                                                  "SigmaExp": -1.,
-                                                                 "SigmaRc": 60.*c.au
+                                                                 "SigmaRc": 60.*c.au,
+                                                                 "leverarm": 3.
                                                                  }
                                                               ),
                                        "grid": SimpleNamespace(**{"Nmbpd": 7,
@@ -147,6 +148,7 @@ class Simulation(Frame):
         self.gas = Group(self, description="Gas quantities")
         self.gas.alpha = None
         self.gas.alpha_dw = None
+        self.gas.leverarm = None
         self.gas.boundary = Group(self, description="Boundary conditions")
         self.gas.boundary.inner = None
         self.gas.boundary.outer = None
@@ -175,7 +177,7 @@ class Simulation(Frame):
         self.gas.v.visc = None
         self.gas.v.wind = None
         self.gas.v.updater = ["wind", "visc", "rad"]
-        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "cs", "Hp", "nu", "nu_dw",
+        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
                             "rho", "n", "mfp", "P", "eta", "S"]
 
         # Grid quantities
@@ -660,6 +662,11 @@ class Simulation(Frame):
             alpha_dw = self.ini.gas.alpha_dw * np.ones(shape1)
             self.gas.alpha_dw = Field(
                 self, alpha_dw, description="MHD wind alpha parameter")
+        # lever arm for the wind component
+        if self.gas.leverarm is None:
+            leverarm = self.ini.gas.leverarm 
+            self.gas.leverarm = Field(
+                self, leverarm, description="lever arm of MHD winds")
         # Sound speed
         if self.gas.cs is None:
             self.gas.cs = Field(self, np.zeros(shape1),

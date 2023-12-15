@@ -289,8 +289,14 @@ subroutine jac_abc(area, nu, r, ri, v, wind_ext, A, B, C, Nr)
 
    ! Normailization
    A(:) = A(:) * Vinv(:)
-   B(:) = B(:) * Vinv(:) + wind_ext(:)
+   B(:) = B(:) * Vinv(:) 
    C(:) = C(:) * Vinv(:)
+
+   do ir=2, Nr-1
+
+      B(ir) = B(ir) + wind_ext(ir)
+   
+   end do 
 
 end subroutine jac_abc
 

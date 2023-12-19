@@ -201,7 +201,7 @@ def jacobian(sim, x, dx=None, *args, **kwargs):
 
     # Parameters
     nu = sim.gas.nu * sim.dust.backreaction.A
-    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK + sim.gas.v.wind
+    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK + sim.gas.v.wind * sim.grid.r # v -> vr in algorithm
     wind_ext = -3. * sim.gas.cs**2 * sim.gas.alpha_dw/ (4. * (sim.gas.leverarm-1) * sim.grid.r**2 * sim.grid.OmegaK)
     # Helper variables for convenience
     if dx is None:

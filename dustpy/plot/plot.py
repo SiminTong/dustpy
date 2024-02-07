@@ -116,7 +116,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax01.set_xlabel("Particle mass [g]")
     ax01.set_ylabel("$\sigma_\mathrm{d}$ [g/cm²]")
 
-    if data.Nt < 3:
+    if data2.Nt < 3:
         ax02.set_xticks([0., 1.])
         ax02.set_yticks([0., 1.])
         ax02.text(0.5,

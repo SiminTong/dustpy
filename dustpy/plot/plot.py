@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 from scipy.interpolate import interp1d
+import dustpy.constants as c
 from simframe.io.writers import hdf5writer
 import os
 import warnings
@@ -107,6 +108,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax00.set_yscale("log")
     ax00.set_xlabel("Distance from star [AU]")
     ax00.set_ylabel("Particle mass [g]")
+    ax00.set_title('t= %.3f Myr' %(data.t[it]/c.year/1e6)) # add the evolution time
 
     ax01.loglog(data.m[it, ...], data.sigmaDust[it, ir, :], c="C3")
     ax01.set_xlim(data.m[it, 0], data.m[it, -1])

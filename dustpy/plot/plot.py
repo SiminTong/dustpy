@@ -12,7 +12,7 @@ import os
 import warnings
 
 
-def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits=True, show_St1=True):
+def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits=True, show_St1=True, save=False):
     """Simple plotting script for data files or simulation objects.
 
     Parameters
@@ -158,6 +158,9 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
 
     fig.text(0.99, 0.01, "DustPy v"+__version__, horizontalalignment="right",
              verticalalignment="bottom")
+
+    if save == True:
+        plt.savefig('dustpy_overview_'+str(it)+'png', dpi=300, bbox_inches='tight')
 
     plt.show()
 

@@ -161,7 +161,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
 
     if save == True:
         if isinstance(data,str):
-            plt.savefig(data+'dustpy_overview_'+str(it)+'.png', dpi=300, bbox_inches='tight')
+            plt.savefig('dustpy_overview_'+str(it)+'.png', dpi=300, bbox_inches='tight')
 
     plt.show()
 

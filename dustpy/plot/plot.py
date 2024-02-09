@@ -122,7 +122,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
         '''convert particle mass to partice size by assuming 
         default internal density value (1.67 gcm-3)'''
         S = (3 * m / (4 * np.pi * rho_int)) ** (1/3)
-        return ["%.2e" %s for s in S]
+        return ["%.1e" %s for s in S]
 
 
     ax01_2 = ax01.twiny()
@@ -130,7 +130,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     m_max = data2.m[it,-1]
     m_min = data2.m[it,0]
     ax01_2.set_xlim(m_min, m_max)
-    tick_num = 5
+    tick_num = 4
     x2_ticks = np.logspace(np.log10(m_min), np.log10(m_max), tick_num)
     ax01_2.set_xticks(x2_ticks)
     ax01_2.set_xticklabels(mass2size(x2_ticks))

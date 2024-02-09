@@ -530,7 +530,7 @@ def MRN_distribution(sim):
         gamma = np.abs(gamma)
         # Exponent of pressure gradient
         gamma *= sim.grid.r / P
-        gamma = 1. / gamma
+        #gamma = 1. / gamma # gamma is inverted twice if not commenting this line
         # Maximum drift limited particle size with safety margin
         ad = 1.e-4 * 2./np.pi * sim.ini.dust.d2gRatio * sim.gas.Sigma \
             / (sim.dust.fill[:, 0] * sim.dust.rhos[:, 0]) * (sim.grid.OmegaK * sim.grid.r)**2. \

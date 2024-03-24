@@ -59,6 +59,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax00 = fig.add_subplot(231)
     ax01 = fig.add_subplot(232)
     ax02 = fig.add_subplot(233)
+    ax02r = ax02.twinx()
     ax10 = fig.add_subplot(234)
     ax11 = fig.add_subplot(235)
     ax11r = ax11.twinx()
@@ -152,9 +153,14 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
         ax02.axvline(data2.t[it]/c.year, c="#AAAAAA", lw=1, ls="--")
         ax02.set_xlim(data2.t[1]/c.year, data2.t[-1]/c.year)
         ax02.set_ylim(10.**(Mmax-6.), 10.**Mmax)
+        ax02r.loglog(data2.t/c.year, data2.Mdust/data2.Mgas, c='grey')
+        ax02r.set_ylim(1.e-5, 1.e1)
+        ax02r.set_ylabel('Dust-to-gas ratio')
         ax02.legend()
     ax02.set_xlabel("Time [yrs]")
     ax02.set_ylabel("Mass [$M_\odot$]")
+    
+    
 
     ax10.loglog(data2.r[it, ...]/c.au, data2.sigmaDust[it, :, im], c="C3")
     ax10.set_xlim(data2.r[it, 0]/c.au, data2.r[it, -1]/c.au)

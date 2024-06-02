@@ -566,7 +566,8 @@ subroutine t_pass(L, r, T, Nr)
 
    ! The prefactor is
    ! 0.5*phi/4. = 0.5*0.05/4. = 0.00625
-   T(:) = ( 6.25d-3 * L / (pi * r(:)**2 * sigma_sb) )**2.5d-1
+   ! the 0.5 is redundant 0.00625 -> 0.0125
+   T(:) = ( 1.25d-2 * L / (pi * r(:)**2 * sigma_sb) )**2.5d-1
 
 end subroutine t_pass
 

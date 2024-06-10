@@ -262,6 +262,20 @@ def jacobian(sim, x, dx=None, *args, **kwargs):
             B01 = -(K1/dt)[0]
             sim.gas._rhs[0] = 0.
 
+        elif sim.gas.boundary.inner.condition == 'NZ_torque':
+            # modified by CChen & STong
+
+            f = sim.gas.boundary.inner.value
+            _xi = np.sqrt(ri)
+            _x  = np.sqrt(r)
+            K1 = f * _xi[1] / _x[0]**3 * _x[1]**3/(_x[2]-_x[1])
+            K2 = f * _xi[1] / _x[0]**3 * _x[2]**3/(_x[2]-_x[1])
+
+            B00, B01, B02 = 0., -(K1/dt)[0], (K2/dt)[0]
+
+            sim.gas._rhs[0] = 0.
+
+
     row_in = [0, 0, 0]
     col_in = [0, 1, 2]
     dat_in = [B00, B01, B02]

@@ -143,7 +143,7 @@ class Boundary(object):
             _x  = np.sqrt(r)
             _sigma = S * _x**3 
             _dSdx  = (_sigma[2]-_sigma[1])/(_x[2]-_x[1])
-            return self._value * _xi * _dSdx/ _x[0]**3
+            return self._value * _xi[1] * _dSdx/ _x[0]**3
 
     def setboundary(self):
         """Function sets the boundary value."""

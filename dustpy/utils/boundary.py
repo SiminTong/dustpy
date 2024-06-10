@@ -58,6 +58,8 @@ class Boundary(object):
             text = "Gradient"
         elif self._condition == "pow":
             text = "Power law with set exponent"
+        elif self._condition =='NZ_torque':
+            text = 'Non-zero torque'
         ret = "{}".format(text)
         return ret
 
@@ -97,8 +99,8 @@ class Boundary(object):
                 - None : Don't impose boundary condition (default)
         value : float or array, optional, default : None
             Value if needed for boundary condition"""
-        if condition in [None, "const_val", "const_pow", "const_grad", "grad", "val", "pow"]:
-            if condition in ["val", "grad", "pow"] and value is None:
+        if condition in [None, "const_val", "const_pow", "const_grad", "grad", "val", "pow", "NZ_torque"]:
+            if condition in ["val", "grad", "pow", "NZ_torque"] and value is None:
                 msg = "You have to give a value for condition '{:}'.".format(
                     condition)
                 raise ValueError(msg)

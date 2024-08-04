@@ -176,6 +176,7 @@ class Simulation(Frame):
         self.gas.v.rad = None
         self.gas.v.visc = None
         self.gas.v.wind = None
+        self.gas.v.infall = None
         self.gas.v.updater = ["wind", "visc", "rad"]
         self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
                             "rho", "n", "mfp", "P", "eta", "S"]
@@ -768,12 +769,17 @@ class Simulation(Frame):
             self.gas.v.wind = Field(self, np.zeros(shape1),
                                     description = "MHD wind velocity [cm/s]")
             self.gas.v.wind.updater = std.gas.vwind
-        #TODO: write std.gas.vwind
+         # radial velocity induced by infall gas
+        if self.gas.v.infall is None:
+            self.gas.v.infall = Field(self, np.zeros(shape1), 
+                                    description="Velocity induced by infall gas [cm/s]")
+            self.gas.v.infall.updater = std.gas.vinfall
         # Radial gas velocity
         if self.gas.v.rad is None:
             self.gas.v.rad = Field(self, np.zeros(shape1),
                                    description="Radial velocity [cm/s]")
             self.gas.v.rad.updater = std.gas.vrad
+       
         # Hidden fields
         # We store the old values of the surface density in a hidden field
         # to calculate the fluxes through the boundaries.

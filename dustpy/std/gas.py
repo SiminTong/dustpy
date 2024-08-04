@@ -528,6 +528,7 @@ def vrad(sim):
     -------
     vrad : Field
         Radial gas velocity"""
+    
     return gas_f.v_rad(
         sim.dust.backreaction.A,
         sim.dust.backreaction.B,
@@ -535,7 +536,8 @@ def vrad(sim):
         sim.grid.OmegaK,
         sim.grid.r,
         sim.gas.v.visc,
-        sim.gas.v.wind
+        sim.gas.v.wind,
+        sim.gas.v.infall
     )
 
 def vwind(sim):
@@ -551,6 +553,21 @@ def vwind(sim):
     vwind : Field
          Radial gas velocity driven by MHD winds"""
     return gas_f.v_wind(sim.gas.nu_dw, sim.grid.r, sim.grid.ri)
+
+def vinfall(sim):
+    """Function calculates the radial gas velocity induced by the infall gas.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    vinfall: Field
+         Radial gas velocity induced by the infall gas"""
+
+    return gas_f.v_infall(sim.grid.r, sim.grid.ri, sim.infall.rout, sim.gas.S.ext, sim.gas.Sigma)
     
 
 def vvisc(sim):

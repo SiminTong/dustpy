@@ -609,17 +609,19 @@ subroutine timestep(S, Sigma, SigmaFloor, dt, Nr)
 end subroutine timestep
 
 
-subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, v, Nr)
+subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, vinf, v, Nr)
    ! Function calculates the radial gas velocity.
    !
    ! Parameters
    ! ----------
-   ! A(Nr) : A backreaction coefficient
-   ! B(Nr) : B backreaction coefficient
-   ! eta(Nr) : eta pressure gradient parameter
-   ! OmegaK(Nr) : Keplerian frequency
-   ! r(Nr) : Radial grid cell centers
-   ! vv(Nr) : Viscous gas velocity
+   ! A(Nr): A backreaction coefficient
+   ! B(Nr): B backreaction coefficient
+   ! eta(Nr): eta pressure gradient parameter
+   ! OmegaK(Nr): Keplerian frequency
+   ! r(Nr): Radial grid cell centers
+   ! vv(Nr): Viscous gas velocity
+   ! vw(Nr): wind-driven velocity
+   ! vinf(Nr): radial velocity induced by the infall gas
    ! Nr : Number of radial grid cells
    !
    ! Returns
@@ -635,13 +637,14 @@ subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, v, Nr)
    double precision, intent(in)  :: r(Nr)
    double precision, intent(in)  :: vv(Nr)
    double precision, intent(in)  :: vw(Nr)
+   double precision, intent(in)  :: vinf(Nr)
    double precision, intent(out) :: v(Nr)
    integer,          intent(in)  :: Nr
 
    double precision :: vb(Nr)
 
    vb(:) = 2.d0 * eta(:) * r(:) * OmegaK(:)
-   v(:) = A(:)*vv(:) + B(:)*vb(:) + vw(:)
+   v(:) = A(:)*vv(:) + B(:)*vb(:) + vw(:) + vinf(:)
 
 end subroutine v_rad
 
@@ -682,7 +685,44 @@ subroutine v_wind(nu_dw, r, ri, vwind, Nr)
 
 end subroutine v_wind
 
+subroutine v_infall(r, ri, r_centri, sigmadot, sigma, vinfall, Nr)
+   ! Function calculates the radial wind velocity.
+   ! Mass flux is linearly interpolated on grid cell interfaces.
+   !
+   ! Parameters
+   ! ----------
+   ! r(Nr): Radial grid cell centers
+   ! ri(Nr+1): Radial grid cell interfaces
+   ! r_centri: centrifugal radius  
+   ! sigmadot: infall surface density rate
+   ! sigma: surface density
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! vinfall(Nr): velocity induced by the infall gas
 
+   implicit none
+
+   double precision, intent(in)  :: r(Nr)
+   double precision, intent(in)  :: ri(Nr+1)
+   double precision, intent(in)  :: sigmadot(Nr)
+   double precision, intent(in)  :: sigma(Nr)
+   double precision, intent(in)  :: r_centri
+   double precision, intent(out) :: vinfall(Nr)
+   integer,          intent(in)  :: Nr
+
+   double precision :: arg(Nr)
+   double precision :: argi(Nr+1)
+
+   arg(:) = 2.0d0 * sigmadot(:) / sigma(:) * ((r**3/r_centri)**0.5d0 - r)
+   call interp1d(ri, r, arg, argi, Nr)
+
+
+   vinfall(:)  = argi(1:Nr)
+   !BC for vvisc: constant slope; we didn't impose any BC for MHD winds!
+
+end subroutine vinfall
 
 
 subroutine v_visc(Sigma, nu, r, ri, vvisc, Nr)

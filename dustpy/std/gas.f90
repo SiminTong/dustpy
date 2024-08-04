@@ -722,7 +722,7 @@ subroutine v_infall(r, ri, r_centri, sigmadot, sigma, vinfall, Nr)
    vinfall(:)  = argi(1:Nr)
    !BC for vvisc: constant slope; we didn't impose any BC for MHD winds!
 
-end subroutine vinfall
+end subroutine v_infall
 
 
 subroutine v_visc(Sigma, nu, r, ri, vvisc, Nr)

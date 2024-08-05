@@ -541,7 +541,8 @@ def MRN_distribution(sim):
     s = np.sum(ret, axis=1)[..., None]
     s = np.where(s > 0., s, 1.)
     # Normalize to mass
-    ret = ret / s * sim.gas.Sigma[..., None] * sim.gas.ratio * sim.ini.dust.d2gRatio
+    gas_ratio_matrix = np.vstack([sim.gas.ratio]*sim.grid.Nm)
+    ret = ret / s * sim.gas.Sigma[..., None] * gas_ratio_matrix * sim.ini.dust.d2gRatio
     return ret
 
 

@@ -194,7 +194,7 @@ def eps(sim):
     -------
     eps : Field
         vertically integrated dust-to-gas ratio"""
-    return np.sum(sim.dust.Sigma, axis=-1) / sim.gas.Sigma
+    return np.sum(sim.dust.Sigma, axis=-1) / (sim.gas.Sigma * sim.gas.ratio)
 
 
 def F_adv(sim, Sigma=None):
@@ -224,7 +224,7 @@ def F_diff(sim, Sigma=None):
 
     Fi = dust_f.fi_diff(sim.dust.D,
                         Sigma,
-                        sim.gas.Sigma,
+                        sim.gas.Sigma*sim.gas.ratio,
                         sim.dust.St,
                         np.sqrt(sim.dust.delta.rad*sim.gas.cs**2),
                         sim.grid.r,
@@ -349,7 +349,7 @@ def jacobian(sim, x, dx=None, *args, **kwargs):
         sim.dust.D,
         r,
         ri,
-        sim.gas.Sigma,
+        sim.gas.Sigma * sim.gas.ratio,  #TODO: CHECK if we need to modify the gas surface density here!
         sim.dust.v.rad
     )
     J_hyd = sp.diags(
@@ -524,7 +524,7 @@ def MRN_distribution(sim):
         aIni = sim.ini.dust.aIniMax
     else:
         # Calculating pressure gradient
-        P = sim.gas.P
+        P = sim.gas.P_m
         Pi = dust_f.interp1d(sim.grid.ri, sim.grid.r, P)
         gamma = (Pi[1:] - Pi[:-1]) / (sim.grid.ri[1:] - sim.grid.ri[:-1])
         gamma = np.abs(gamma)
@@ -532,7 +532,7 @@ def MRN_distribution(sim):
         gamma *= sim.grid.r / P
         #gamma = 1. / gamma # gamma is inverted twice if not commenting this line
         # Maximum drift limited particle size with safety margin
-        ad = 1.e-4 * 2./np.pi * sim.ini.dust.d2gRatio * sim.gas.Sigma \
+        ad = 1.e-4 * 2./np.pi * sim.ini.dust.d2gRatio * sim.gas.Sigma * sim.gas.ratio \
             / (sim.dust.fill[:, 0] * sim.dust.rhos[:, 0]) * (sim.grid.OmegaK * sim.grid.r)**2. \
             / sim.gas.cs**2. / gamma
         aIni = np.minimum(sim.ini.dust.aIniMax, ad)[:, None]
@@ -541,7 +541,7 @@ def MRN_distribution(sim):
     s = np.sum(ret, axis=1)[..., None]
     s = np.where(s > 0., s, 1.)
     # Normalize to mass
-    ret = ret / s * sim.gas.Sigma[..., None] * sim.ini.dust.d2gRatio
+    ret = ret / s * sim.gas.Sigma[..., None] * sim.gas.ratio * sim.ini.dust.d2gRatio
     return ret
 
 
@@ -729,7 +729,10 @@ def St_Epstein_StokesI(sim):
     St : Field
         Stokes number"""
     rho = sim.dust.rhos * sim.dust.fill
-    return dust_f.st_epstein_stokes1(sim.dust.a, sim.gas.mfp, rho, sim.gas.Sigma)
+    # when it comes to the dust computation, we adopt the modifed gas surface density /gas 
+    # mean free path by the binary system.
+    
+    return dust_f.st_epstein_stokes1(sim.dust.a, sim.gas.mfp_m, rho, sim.gas.Sigma*sim.gas.ratio)
 
 
 def coagulation_parameters(sim):
@@ -781,7 +784,7 @@ def vdriftmax(sim):
     A = sim.dust.backreaction.A
     B = sim.dust.backreaction.B
     return 0.5 * B * sim.gas.v.visc - A * \
-        sim.gas.eta * sim.grid.r * sim.grid.OmegaK
+        sim.gas.eta_m * sim.grid.r * sim.grid.OmegaK
 
 
 def vrad(sim):
@@ -879,7 +882,7 @@ def vrel_turbulent_motion(sim):
         sim.gas.cs,
         sim.gas.mu,
         sim.grid.OmegaK,
-        sim.gas.Sigma,
+        sim.gas.Sigma*sim.gas.ratio,
         sim.dust.St)
 
 

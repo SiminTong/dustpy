@@ -137,6 +137,21 @@ def eta_midplane(sim):
         eta pressure gradient parameter"""
     return gas_f.eta_midplane(sim.gas.Hp, sim.gas.P, sim.grid.r, sim.grid.ri)
 
+def eta_midplane_modif(sim):
+    """Function calculates the midplane pressure gradient parameter
+    modified by the binary system.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    eta : Field
+        eta pressure gradient parameter"""
+    return gas_f.eta_midplane(sim.gas.Hp, sim.gas.P_m, sim.grid.r, sim.grid.ri)
+
 
 def Fi(sim):
     """Function calculates the mass flux through the cell interfaces.
@@ -356,6 +371,23 @@ def mfp_midplane(sim):
         sim.gas.n
     )
 
+def mfp_midplane_modif(sim):
+    """Function calculates the midplane mean free path
+    modified by the binary system.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    mfp : Field
+        Mean free path"""
+    return gas_f.mfp_midplane(
+        sim.gas.n_m
+    )
+
 
 def n_midplane(sim):
     """Function calculates the midplane number density of the gas.
@@ -374,6 +406,23 @@ def n_midplane(sim):
         sim.gas.rho
     )
 
+def n_midplane_modif(sim):
+    """Function calculates the midplane number density of the gas modified by the 
+    binary system.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    n : Field
+        Midplane number density"""
+    return gas_f.n_midplane(
+        sim.gas.mu,
+        sim.gas.rho_m
+    )
 
 def nu(sim):
     """Function calculates the kinematic viscocity of the gas.
@@ -431,6 +480,25 @@ def P_midplane(sim):
         sim.gas.rho
     )
 
+def P_midplane_modif(sim):
+    """Function calculates the midplane gas pressure
+    modified by the binary system.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    P : Field
+        Midplane pressure"""
+    return gas_f.p_midplane(
+        sim.gas.cs,
+        sim.gas.gamma,
+        sim.gas.rho_m
+    )
+
 
 def rho_midplane(sim):
     """Function calculates the midplane mass density of the gas.
@@ -447,6 +515,24 @@ def rho_midplane(sim):
     return gas_f.rho_midplane(
         sim.gas.Hp,
         sim.gas.Sigma
+    )
+
+def rho_midplane_modif(sim):
+    """Function calculates the midplane mass density of the gas
+     with the modified gas surface density (by binary systems).
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    rho : Field
+        Midplane mass density"""
+    return gas_f.rho_midplane(
+        sim.gas.Hp,
+        sim.gas.Sigma* sim.gas.ratio
     )
 
 

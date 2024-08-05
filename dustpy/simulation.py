@@ -154,16 +154,21 @@ class Simulation(Frame):
         self.gas.boundary.outer = None
         self.gas.cs = None
         self.gas.eta = None
+        self.gas.eta_m = None
         self.gas.Fi = None
         self.gas.gamma = None
         self.gas.Hp = None
         self.gas.mfp = None
+        self.gas.mfp_m = None
         self.gas.mu = None
         self.gas.n = None
+        self.gas.n_m = None
         self.gas.nu = None
         self.gas.nu_dw = None
         self.gas.P = None
+        self.gas.P_m = None
         self.gas.rho = None
+        self.gas.rho_m = None
         self.gas.S = Group(self, description="Source terms")
         self.gas.S.ext = None
         self.gas.S.hyd = None
@@ -677,6 +682,11 @@ class Simulation(Frame):
             self.gas.eta = Field(self, np.zeros(
                 shape1), description="Pressure gradient parameter")
             self.gas.eta.updater = std.gas.eta_midplane
+        # Modified pressure gradient parameter
+        if self.gas.eta_m is None:
+            self.gas.eta_m = Field(self, np.zeros(
+                shape1), description="Modified Pressure gradient parameter")
+            self.gas.eta_m.updater = std.gas.eta_midplane_modif
         # Gas flux at the cell interfaces
         if self.gas.Fi is None:
             self.gas.Fi = Field(self, np.zeros(shape1p1),
@@ -697,6 +707,11 @@ class Simulation(Frame):
             self.gas.mfp = Field(self, np.zeros(shape1),
                                  description="Midplane mean free path [cm]")
             self.gas.mfp.updater = std.gas.mfp_midplane
+         # Modified mean free path
+        if self.gas.mfp_m is None:
+            self.gas.mfp_m = Field(self, np.zeros(shape1),
+                                 description="Modified midplane mean free path [cm]")
+            self.gas.mfp_m.updater = std.gas.mfp_midplane_modif
         # Mean molecular weight
         if self.gas.mu is None:
             mu = self.ini.gas.mu * np.ones(shape1)
@@ -707,6 +722,11 @@ class Simulation(Frame):
             self.gas.n = Field(self, np.zeros(shape1),
                                description="Miplane number density [1/cm³]")
             self.gas.n.updater = std.gas.n_midplane
+        # Modified midplane number density
+        if self.gas.n_m is None:
+            self.gas.n_m = Field(self, np.zeros(shape1),
+                               description="Modified miplane number density [1/cm³]")
+            self.gas.n_m.updater = std.gas.n_midplane_modif
         # Viscosity
         if self.gas.nu is None:
             self.gas.nu = Field(self, np.zeros(shape1),
@@ -723,12 +743,22 @@ class Simulation(Frame):
             self.gas.P = Field(self, np.zeros(shape1),
                                description="Midplane pressure [g/cm/s²]")
             self.gas.P.updater = std.gas.P_midplane
+        # Modified midplane pressure
+        if self.gas.P_m is None:
+            self.gas.P_m = Field(self, np.zeros(shape1),
+                               description="Modified midplane pressure [g/cm/s²]")
+            self.gas.P_m.updater = std.gas.P_midplane_modif
         # Midplane mass density
         if self.gas.rho is None:
             self.gas.rho = Field(self, np.zeros(shape1),
                                  description="Miplane mass density [g/cm³]")
             self.gas.rho.updater = std.gas.rho_midplane
-        # Sources
+        # Modified midplane mass density
+        if self.gas.rho_m is None:
+            self.gas.rho_m = Field(self, np.zeros(shape1),
+                                 description="Modified miplane mass density [g/cm³]")
+            self.gas.rho_m.updater = std.gas.rho_midplane_modif
+         # Sources
         if self.gas.S.hyd is None:
             self.gas.S.hyd = Field(self, np.zeros(
                 shape1), description="Hydrodynamic sources [g/cm²/s]")

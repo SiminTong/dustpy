@@ -532,7 +532,7 @@ def MRN_distribution(sim):
         gamma *= sim.grid.r / P
         #gamma = 1. / gamma # gamma is inverted twice if not commenting this line
         # Maximum drift limited particle size with safety margin
-        ad = 1.e-4 * 2./np.pi * sim.ini.dust.d2gRatio * sim.gas.Sigma * sim.gas.ratio \
+        ad = 5.e-3 * 2./np.pi * sim.ini.dust.d2gRatio * sim.gas.Sigma * sim.gas.ratio \
             / (sim.dust.fill[:, 0] * sim.dust.rhos[:, 0]) * (sim.grid.OmegaK * sim.grid.r)**2. \
             / sim.gas.cs**2. / gamma
         aIni = np.minimum(sim.ini.dust.aIniMax, ad)[:, None]

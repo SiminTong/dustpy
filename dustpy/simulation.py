@@ -184,7 +184,7 @@ class Simulation(Frame):
         self.gas.v.wind = None
         self.gas.v.updater = ["wind", "visc", "rad"]
         self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
-                            "rho", "n", "mfp", "P", "eta", "S"]
+                            "rho", "rho_m", "n", "n_m", "mfp", "mfp_m",  "P", 'P_m', "eta", "eta_m", "S"]
 
         # Grid quantities
         self.grid = Group(self, description="Grid quantities")
@@ -742,7 +742,6 @@ class Simulation(Frame):
             self.gas.nu_dw = Field(self, np.zeros(shape1),
                                    description="Viscosity-equivalent for MHD winds")
             self.gas.nu_dw.updater = std.gas.nu_dw
-        #TODO: write std.gas.nu_dw
         # Midplane pressure
         if self.gas.P is None:
             self.gas.P = Field(self, np.zeros(shape1),

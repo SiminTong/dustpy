@@ -274,7 +274,7 @@ def jacobian(sim, x, dx=None, *args, **kwargs):
             p = np.log(sim.gas.Sigma[2] /
                        sim.gas.Sigma[1]) / np.log(r[2]/r[1])
             K1 = - (r[0]/r[1])**p
-            B01 = -(K1/dt)[0]
+            B01 = -(K1/dt) #[0]
             sim.gas._rhs[0] = 0.
 
     row_in = [0, 0, 0]

@@ -169,6 +169,7 @@ class Simulation(Frame):
         self.gas.P_m = None
         self.gas.rho = None
         self.gas.rho_m = None
+        self.gas.ratio = None
         self.gas.S = Group(self, description="Source terms")
         self.gas.S.ext = None
         self.gas.S.hyd = None
@@ -657,6 +658,10 @@ class Simulation(Frame):
         '''Function to initialize gas quantities'''
         shape1 = (int(self.grid.Nr))
         shape1p1 = (int(self.grid.Nr)+1)
+        # ratio between the modified gas surface density to the normal one
+        if self.gas.ratio is None:
+            self.gas.ratio = Field(
+                self, np.ones(self.grid.Nr), description = 'surface density ratio') 
         # Turbulent alpha parameter
         if self.gas.alpha is None:
             alpha = self.ini.gas.alpha * np.ones(shape1)

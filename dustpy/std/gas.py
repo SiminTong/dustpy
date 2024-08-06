@@ -98,7 +98,7 @@ def dt(sim):
         Gas time step"""
     return gas_f.timestep(
         sim.gas.S.tot,
-        sim.gas.Sigma,
+        sim.gas.Sigma*sim.gas.ratio,
         sim.gas.SigmaFloor
     )
 

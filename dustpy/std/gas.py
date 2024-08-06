@@ -674,13 +674,13 @@ def _f_impl_1_direct(x0, Y0, dx, jac=None, rhs=None, *args, **kwargs):
 
     # Add external source terms to right-hand side
     rhs[:] = gas_f.modified_rhs(
-        dx[0],
+        dx, #original: dx[0]
         rhs,
         Y0._owner.gas.S.ext
     )
 
     jac.data[:] = gas_f.modified_jacobian(
-        dx[0],
+        dx, #original: dx[0]
         jac.data,
         jac.indices,
         jac.indptr

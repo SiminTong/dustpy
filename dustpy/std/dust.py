@@ -946,7 +946,8 @@ def _f_impl_1_direct(x0, Y0, dx, jac=None, rhs=None, *args, **kwargs):
     N = jac.shape[0]
     eye = sp.identity(N, format="csc")
 
-    A = eye - dx[0] * jac
+    #A = eye - dx[0] * jac # origin
+    A = eye - dx * jac # change to adapt to numpy 2.0
 
     A_LU = sp.linalg.splu(A,
                           permc_spec="MMD_AT_PLUS_A",

@@ -532,7 +532,7 @@ def rho_midplane_modif(sim):
         Midplane mass density"""
     return gas_f.rho_midplane(
         sim.gas.Hp,
-        sim.gas.Sigma* sim.gas.ratio
+        sim.gas.Sigma *sim.gas.ratio
     )
 
 

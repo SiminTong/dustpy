@@ -199,8 +199,8 @@ def jacobian(sim, x, *args, **kwargs):
 
     # Parameters
     nu = sim.gas.nu * sim.dust.backreaction.A
-    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK
-
+    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK + sim.gas.v.wind
+    wind_ext = -3. * sim.gas.cs**2.* sim.gas.alpha_dw/ (4. * (sim.gas.leverarm-1) * sim.grid.r**2. * sim.grid.OmegaK)
     # Helper variables for convenience
     r = sim.grid.r
     ri = sim.grid.ri
@@ -208,7 +208,7 @@ def jacobian(sim, x, *args, **kwargs):
     Nr = int(sim.grid.Nr)
 
     # Construct Jacobian
-    A, B, C = gas_f.jac_abc(area, nu, r, ri, v)
+    A, B, C = gas_f.jac_abc(area, nu, r, ri, v, wind_ext)
     row_hyd = np.hstack(
         (np.arange(Nr-1)+1, np.arange(Nr), np.arange(Nr-1)))
     col_hyd = np.hstack(
@@ -310,6 +310,25 @@ def nu(sim):
         Kinematic viscosity"""
     return gas_f.viscosity(
         sim.gas.alpha,
+        sim.gas.cs,
+        sim.gas.Hp
+    )
+
+def nu_dw(sim):
+    """Function calculates the wind-equivalent viscocity of the gas.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    nu_dw : Field
+        wind viscosity"""
+
+    return gas_f.viscosity_dw(
+        sim.gas.alpha_dw,
         sim.gas.cs,
         sim.gas.Hp
     )
@@ -422,9 +441,24 @@ def vrad(sim):
         sim.gas.eta,
         sim.grid.OmegaK,
         sim.grid.r,
-        sim.gas.v.visc
+        sim.gas.v.visc,
+        sim.gas.v.wind
     )
 
+def vwind(sim):
+    """Function calculates the radial gas velocity driven by MHD winds.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    vwind : Field
+         Radial gas velocity driven by MHD winds"""
+    return gas_f.v_wind(sim.gas.nu_dw, sim.grid.r, sim.grid.ri)
+    
 
 def vvisc(sim):
     """Function calculates the viscous radial gas velocity.

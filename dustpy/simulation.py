@@ -50,11 +50,13 @@ class Simulation(Frame):
                                                                   }
                                                                ),
                                        "gas": SimpleNamespace(**{"alpha": 1.e-3,
+                                                                 "alpha_dw": 0.,
                                                                  "gamma": 1.4,
                                                                  "Mdisk": 0.05*c.M_sun,
                                                                  "mu": 2.3*c.m_p,
                                                                  "SigmaExp": -1.,
-                                                                 "SigmaRc": 60.*c.au
+                                                                 "SigmaRc": 60.*c.au,
+                                                                 "leverarm": 3.
                                                                  }
                                                               ),
                                        "grid": SimpleNamespace(**{"Nmbpd": 7,
@@ -145,6 +147,8 @@ class Simulation(Frame):
         # Gas quantities
         self.gas = Group(self, description="Gas quantities")
         self.gas.alpha = None
+        self.gas.alpha_dw = None
+        self.gas.leverarm = None
         self.gas.boundary = Group(self, description="Boundary conditions")
         self.gas.boundary.inner = None
         self.gas.boundary.outer = None
@@ -157,6 +161,7 @@ class Simulation(Frame):
         self.gas.mu = None
         self.gas.n = None
         self.gas.nu = None
+        self.gas.nu_dw = None
         self.gas.P = None
         self.gas.rho = None
         self.gas.S = Group(self, description="Source terms")
@@ -170,8 +175,9 @@ class Simulation(Frame):
         self.gas.v = Group(self, description="Velocities")
         self.gas.v.rad = None
         self.gas.v.visc = None
-        self.gas.v.updater = ["visc", "rad"]
-        self.gas.updater = ["gamma", "mu", "T", "alpha", "cs", "Hp", "nu",
+        self.gas.v.wind = None
+        self.gas.v.updater = ["wind", "visc", "rad"]
+        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
                             "rho", "n", "mfp", "P", "eta", "S"]
 
         # Grid quantities
@@ -661,6 +667,16 @@ class Simulation(Frame):
             alpha = self.ini.gas.alpha * np.ones(shape1)
             self.gas.alpha = Field(
                 self, alpha, description="Turbulent alpha parameter")
+        # MHD wind alpha parameter
+        if self.gas.alpha_dw is None:
+            alpha_dw = self.ini.gas.alpha_dw * np.ones(shape1)
+            self.gas.alpha_dw = Field(
+                self, alpha_dw, description="MHD wind alpha parameter")
+        # lever arm for the wind component
+        if self.gas.leverarm is None:
+            leverarm = self.ini.gas.leverarm 
+            self.gas.leverarm = Field(
+                self, leverarm, description="lever arm of MHD winds")
         # Sound speed
         if self.gas.cs is None:
             self.gas.cs = Field(self, np.zeros(shape1),
@@ -706,6 +722,12 @@ class Simulation(Frame):
             self.gas.nu = Field(self, np.zeros(shape1),
                                 description="Kinematic viscosity [cm²/s]")
             self.gas.nu.updater = std.gas.nu
+        # Wind-equivalent viscosity
+        if self.gas.nu_dw is None:
+            self.gas.nu_dw = Field(self, np.zeros(shape1),
+                                   description="Viscosity-equivalent for MHD winds")
+            self.gas.nu_dw.updater = std.gas.nu_dw
+        #TODO: write std.gas.nu_dw
         # Midplane pressure
         if self.gas.P is None:
             self.gas.P = Field(self, np.zeros(shape1),
@@ -751,6 +773,12 @@ class Simulation(Frame):
             self.gas.v.visc = Field(self, np.zeros(shape1),
                                     description="Viscous accretion velocity [cm/s]")
             self.gas.v.visc.updater = std.gas.vvisc
+        # Wind velocity
+        if self.gas.v.wind is None:
+            self.gas.v.wind = Field(self, np.zeros(shape1),
+                                    description = "MHD wind velocity [cm/s]")
+            self.gas.v.wind.updater = std.gas.vwind
+        #TODO: write std.gas.vwind
         # Radial gas velocity
         if self.gas.v.rad is None:
             self.gas.v.rad = Field(self, np.zeros(shape1),

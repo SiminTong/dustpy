@@ -100,11 +100,12 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax00.axvline(data2.r[it, ir]/c.au, color="#AAAAAA", lw=1, ls="--")
 
     cbar00 = plt.colorbar(plt00, ax=ax00)
-    cbar00.ax.set_ylabel("$\sigma_\mathrm{d}$ [g/cm²]")
+    cbar00.ax.set_ylabel(r"$\sigma_\mathrm{d}$ [g/cm²]")
     cbar00ticklabels = []
     for i in levels:
         cbar00ticklabels.append("$10^{{{:d}}}$".format(int(i)))
     cbar00.ax.set_yticklabels(cbar00ticklabels)
+    ax00.set_xlim(data.r[it, 0]/c.au, data.r[it, -1]/c.au)
     ax00.set_xscale("log")
     ax00.set_yscale("log")
     ax00.set_xlabel("Distance from star [AU]")
@@ -115,7 +116,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax01.set_xlim(data2.m[it, 0], data2.m[it, -1])
     ax01.set_ylim(10.**(sd_max-6.), 10.**sd_max)
     ax01.set_xlabel("Particle mass [g]")
-    ax01.set_ylabel("$\sigma_\mathrm{d}$ [g/cm²]")
+    ax01.set_ylabel(r"$\sigma_\mathrm{d}$ [g/cm²]")
 
     # convert particle mass to particle size
     rho_int = 1.67 # units: gcm-3
@@ -159,15 +160,13 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
         ax02r.set_ylabel('Dust-to-gas ratio')
         ax02.legend()
     ax02.set_xlabel("Time [yrs]")
-    ax02.set_ylabel("Mass [$M_\odot$]")
-    
-    
+    ax02.set_ylabel(r"Mass [$M_\odot$]")
 
     ax10.loglog(data2.r[it, ...]/c.au, data2.sigmaDust[it, :, im], c="C3")
     ax10.set_xlim(data2.r[it, 0]/c.au, data2.r[it, -1]/c.au)
     ax10.set_ylim(10.**(sd_max-6.), 10.**sd_max)
     ax10.set_xlabel("Distance from star [au]")
-    ax10.set_ylabel("$\sigma_\mathrm{d}$ [g/cm²]")
+    ax10.set_ylabel(r"$\sigma_\mathrm{d}$ [g/cm²]")
 
     ax11.loglog(data2.r[it, ...]/c.au, data2.SigmaGas[it, ...], label="Gas")
     ax11.loglog(data2.r[it, ...]/c.au,
@@ -175,7 +174,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax11.set_xlim(data2.r[it, 0]/c.au, data2.r[it, -1]/c.au)
     ax11.set_ylim(10.**(sg_max-6), 10.**sg_max)
     ax11.set_xlabel("Distance from star [AU]")
-    ax11.set_ylabel("$\Sigma$ [g/cm²]")
+    ax11.set_ylabel(r"$\Sigma$ [g/cm²]")
     ax11.legend()
     ax11r.loglog(data2.r[it, ...]/c.au, data2.eps[it, ...], color="C7", lw=1)
     ax11r.set_ylim(1.e-5, 1.e1)
@@ -284,11 +283,12 @@ def ipanel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limit
     plt00vl = ax00.axvline(data.r[it, ir]/c.au, color="#AAAAAA", lw=1, ls="--")
 
     cbar00 = plt.colorbar(plt00, ax=ax00)
-    cbar00.ax.set_ylabel("$\sigma_\mathrm{d}$ [g/cm²]")
+    cbar00.ax.set_ylabel(r"$\sigma_\mathrm{d}$ [g/cm²]")
     cbar00ticklabels = []
     for i in levels:
         cbar00ticklabels.append("$10^{{{:d}}}$".format(int(i)))
     cbar00.ax.set_yticklabels(cbar00ticklabels)
+    ax00.set_xlim(data.r[it, 0]/c.au, data.r[it, -1]/c.au)
     ax00.set_xscale("log")
     ax00.set_yscale("log")
     ax00.set_xlabel("Distance from star [AU]")
@@ -301,7 +301,7 @@ def ipanel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limit
     ylim0 = ylim1 - 6.
     ax01.set_ylim(10.**ylim0, 10.**ylim1)
     ax01.set_xlabel("Particle mass [g]")
-    ax01.set_ylabel("$\sigma_\mathrm{d}$ [g/cm²]")
+    ax01.set_ylabel(r"$\sigma_\mathrm{d}$ [g/cm²]")
 
     if data.Nt < 3:
         ax02.set_xticks([0., 1.])
@@ -321,7 +321,7 @@ def ipanel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limit
         ax02.set_ylim(10.**(Mmax-6.), 10.**Mmax)
         ax02.legend()
     ax02.set_xlabel("Time [yrs]")
-    ax02.set_ylabel("Mass [$M_\odot$]")
+    ax02.set_ylabel(r"Mass [$M_\odot$]")
 
     plt10 = ax10.loglog(data.r[it, ...]/c.au,
                         data.sigmaDust[it, :, im], c="C3")
@@ -331,7 +331,7 @@ def ipanel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limit
     ylim0 = ylim1 - 6.
     ax10.set_ylim(10.**ylim0, 10.**ylim1)
     ax10.set_xlabel("Distance from star [au]")
-    ax10.set_ylabel("$\sigma_\mathrm{d}$ [g/cm²]")
+    ax10.set_ylabel(r"$\sigma_\mathrm{d}$ [g/cm²]")
 
     plt11g = ax11.loglog(data.r[it, ...]/c.au,
                          data.SigmaGas[it, ...], label="Gas")
@@ -341,7 +341,7 @@ def ipanel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limit
     ax11.set_xlim(data.r[it, 0]/c.au, data.r[it, -1]/c.au)
     ax11.set_ylim(10.**(sg_max-6), 10.**sg_max)
     ax11.set_xlabel("Distance from star [AU]")
-    ax11.set_ylabel("$\Sigma$ [g/cm²]")
+    ax11.set_ylabel(r"$\Sigma$ [g/cm²]")
     ax11.legend()
     plt11d2g = ax11r.loglog(data.r[it, ...]/c.au,
                             data.eps[it, ...], color="C7", lw=1)

@@ -577,7 +577,7 @@ def v_frag_distrib(sim):
     vfrag = np.geomspace(0.5, 100, 500)
     a =1.5
     v = np.sqrt(2/np.pi) * ((vfrag-0.5))**2/(a**3) * np.exp(-1.5*(vfrag-0.5)**2/(2*a**2))
-
+    v = v / np.sum(v)
     vfrag_mat = np.random.choice(vfrag, np.array(shape3), p=list(v))
 
     return vfrag_mat

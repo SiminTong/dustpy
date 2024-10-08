@@ -597,7 +597,13 @@ def p_frag(sim):
     -------
     pf : Field
         Fragmentation propability."""
-    return dust_f.pfrag(sim.dust.v.rel.tot, sim.dust.v.frag)
+        
+    if not sim.ini.dust.vfrag_distrib:
+        pfrag = dust_f.pfrag(sim.dust.v.rel.tot, sim.dust.v.frag)
+    else: 
+        pfrag = dust_f.pfrag3D(sim.dust.v.rel.tot, sim.dust.v.frag)
+
+    return pfrag
 
 
 def rho_midplane(sim):

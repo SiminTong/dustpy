@@ -1075,7 +1075,7 @@ subroutine pfrag(vrel, vfrag, pf, Nr, Nm)
 end subroutine pfrag
 
 subroutine pfrag3D(vrel, vfrag, pf, Nr, Nm)
-  ! Subroutine calculates the fragmentation probability.
+  ! Subroutine calculates the fragmentation probability (with 3D vfrag).
   ! It is assuming a Maxwell-Boltzmann velocity distribution.
   ! 
   ! Parameters

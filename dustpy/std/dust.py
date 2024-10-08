@@ -597,7 +597,7 @@ def p_frag(sim):
     -------
     pf : Field
         Fragmentation propability."""
-        
+
     if not sim.ini.dust.vfrag_distrib:
         pfrag = dust_f.pfrag(sim.dust.v.rel.tot, sim.dust.v.frag)
     else: 

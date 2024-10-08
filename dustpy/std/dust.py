@@ -562,6 +562,26 @@ def p_stick(sim):
     p[-1] = 0.
     return p
 
+def v_frag_distrib(sim):
+    '''compute the fragmentation velocity obeying the Maxwell-Boltzmann distribution.
+    
+    Parameters: ? 
+    -----------
+
+    Returns:
+    --------
+    A matrix of randomly choosing v_frag (Nr, Nm, Nm)
+
+    '''
+    shape3 = (int(sim.grid.Nr), int(sim.grid.Nm), int(sim.grid.Nm))
+    vfrag = np.geomspace(0.5, 100, 500)
+    a =1.5
+    v = np.sqrt(2/np.pi) * ((vfrag-0.5))**2/(a**3) * np.exp(-1.5*(vfrag-0.5)**2/(2*a**2))
+
+    vfrag_mat = np.random.choice(vfrag, np.array(shape3), p=list(v))
+
+    return vfrag_mat
+
 
 def p_frag(sim):
     """Function calculates the fragmentation probability.

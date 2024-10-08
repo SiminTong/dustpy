@@ -46,7 +46,8 @@ class Simulation(Frame):
                                                                   "excavatedMass": 1.,
                                                                   "fragmentDistribution": -11/6,
                                                                   "rhoMonomer": 1.67,
-                                                                  "vfrag": 100.
+                                                                  "vfrag": 100.,
+                                                                  "vfrag_distrib": False
                                                                   }
                                                                ),
                                        "gas": SimpleNamespace(**{"alpha": 1.e-3,
@@ -569,10 +570,16 @@ class Simulation(Frame):
                 shape2), description="Stokes number")
             self.dust.St.updater = std.dust.St_Epstein_StokesI
         # Velocities
-        if self.dust.v.frag is None:
+           # add a distribution for the fragmentation velocity 
+        if (self.dust.v.frag is None) & (not self.ini.dust.vfrag_distrib):
             vfrag = self.ini.dust.vfrag * np.ones(shape1)
             self.dust.v.frag = Field(
                 self, vfrag, description="Fragmentation velocity [cm/s]")
+        if (self.dust.v.frag is None) & (self.ini.dust.vfrag_distrib):
+            vfrag = self.ini.dust.vfrag * np.ones(shape3)
+            self.dust.v.frag = Field(
+            self, vfrag, description="Fragmentation velocity [cm/s]")
+            self.dust.v.frag.updater = std.dust.v_frag_distrib
         if self.dust.v.rel.azi is None:
             self.dust.v.rel.azi = Field(self, np.zeros(
                 shape3), description="Relative azimuthal velocity [cm/s]")

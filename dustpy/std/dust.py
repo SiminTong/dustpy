@@ -601,7 +601,7 @@ def p_frag(sim):
     if not sim.ini.dust.vfrag_distrib:
         pfrag = dust_f.pfrag(sim.dust.v.rel.tot, sim.dust.v.frag)
     else: 
-        pfrag = dust_f.pfrag3D(sim.dust.v.rel.tot, sim.dust.v.frag)
+        pfrag = dust_f.pfrag_3(sim.dust.v.rel.tot, sim.dust.v.frag)
 
     return pfrag
 

@@ -1074,7 +1074,7 @@ subroutine pfrag(vrel, vfrag, pf, Nr, Nm)
 
 end subroutine pfrag
 
-subroutine pfrag3D(vrel, vfrag, pf, Nr, Nm)
+subroutine pfrag_3(vrel, vfrag, pf, Nr, Nm)
   ! Subroutine calculates the fragmentation probability (with 3D vfrag).
   ! It is assuming a Maxwell-Boltzmann velocity distribution.
   ! 
@@ -1120,7 +1120,7 @@ subroutine pfrag3D(vrel, vfrag, pf, Nr, Nm)
     end do
   end do
 
-end subroutine pfrag3D
+end subroutine pfrag_3
 
 
 subroutine s_coag(cstick, cstick_ind, A, eps, klf, krm, phi, Kf, Ks, m, Sigma, SigmaFloor, S, Nr, Nm)

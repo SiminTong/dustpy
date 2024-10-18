@@ -181,6 +181,8 @@ class Simulation(Frame):
         self.gas.v.visc = None
         self.gas.v.wind = None
         self.gas.v.tidal= None
+        self.gas.deltaq = None
+        self.gas.Lambda = None
         self.gas.v.updater = ["wind", "visc", "tidal", "rad"]
         self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
                             "rho", "deltaq", "Lambda", "n", "mfp", "P", "eta", "S"]

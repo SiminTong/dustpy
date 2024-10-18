@@ -524,7 +524,7 @@ def Lambda(sim):
     
     """
 
-    return gas_f.Lambda(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltaq)
+    return gas_f.lambdaa(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltaq)
 
 
 def _f_impl_1_direct(x0, Y0, dx, *args, **kwargs):

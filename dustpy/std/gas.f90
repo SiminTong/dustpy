@@ -829,7 +829,7 @@ subroutine viscosity_dw(alpha_dw, cs, Hp, nu_dw, Nr)
 end subroutine viscosity_dw
 
 
-subroutine Lambda(massq, Mstar, r, deltaq,  Nr, lambda_)
+subroutine lambdaa(massq, Mstar, r, deltaq,  Nr, lambda_)
    ! Subroutine calculates the rate of specific angular momentum 
    ! transfer from the secondary to the disc.
    !
@@ -859,4 +859,4 @@ subroutine Lambda(massq, Mstar, r, deltaq,  Nr, lambda_)
 
    lambda_ = - 1.d0 * massq ** 2 * G * Mstar / (2.d0 * r(:)) * (r(:)/deltaq(:)) ** 4
 
-end subroutine Lambda
+end subroutine lambdaa

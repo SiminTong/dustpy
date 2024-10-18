@@ -701,6 +701,8 @@ subroutine v_tidal(r, ri, lambda_,  Mstar, vt, Nr)
    ! -------
    ! vt(Nr) : Radial wind velocity
 
+   use constants, only: G
+
    implicit none
 
    double precision, intent(in)  :: lambda_(Nr)
@@ -714,8 +716,6 @@ subroutine v_tidal(r, ri, lambda_,  Mstar, vt, Nr)
    double precision :: argi(Nr+1)
 
    integer :: ir
-
-   use constants, only: G
 
    arg(:) = 2.d0 * lambda_(:) * SQRT(r(:)) / SQRT(G*Mstar)
 
@@ -845,6 +845,8 @@ subroutine Lambda(massq, Mstar, r, deltaq,  Nr, lambda_)
    ! -------
    ! nu : Kinematic viscosity
 
+   use constants, only: G
+
    implicit none
 
    double precision, intent(in)  :: massq
@@ -854,7 +856,6 @@ subroutine Lambda(massq, Mstar, r, deltaq,  Nr, lambda_)
    double precision, intent(out) :: lambda_(Nr)
    integer,          intent(in)  :: Nr
 
-   use constants, only: G
 
    lambda_ = - 1.d0 * massq ** 2 * G * Mstar / (2.d0 * r(:)) * (r(:)/deltaq(:)) ** 4
 

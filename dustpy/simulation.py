@@ -902,7 +902,7 @@ class Simulation(Frame):
         if self.binary.q is None:
             self.binary.q = Field(self, self.ini.binary.M2/self.ini.star.M, 
                                 description="Mass ratio")
-        
+        self.binary.update()
 
     def setdustintegrator(self, scheme="explicit", method="cash-karp"):
         """Function sets the dust integrator.

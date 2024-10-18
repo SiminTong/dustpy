@@ -442,7 +442,8 @@ def vrad(sim):
         sim.grid.OmegaK,
         sim.grid.r,
         sim.gas.v.visc,
-        sim.gas.v.wind
+        sim.gas.v.wind,
+        sim.gas.v.tidal
     )
 
 def vwind(sim):
@@ -458,6 +459,20 @@ def vwind(sim):
     vwind : Field
          Radial gas velocity driven by MHD winds"""
     return gas_f.v_wind(sim.gas.nu_dw, sim.grid.r, sim.grid.ri)
+
+def vtidal(sim):
+    """Function calculates the radial velocity caused by tidal truncation.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    vtidal : Field
+         Radial gas velocity caused by tidal truncation"""
+    return gas_f.v_tidal(sim.grid.r, sim.grid.ri, sim.gas.Lambda,  sim.star.M)
     
 
 def vvisc(sim):
@@ -473,6 +488,43 @@ def vvisc(sim):
     vvisc : Field
         Viscous radial gas velocity"""
     return gas_f.v_visc(sim.gas.Sigma, sim.gas.nu, sim.grid.r, sim.grid.ri)
+
+def deltaq(sim):
+    """Funcation calculates the distance to the secondary.
+    
+    Eq. 4 in Alexander+2011
+
+    Parameters:
+    -----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns:
+    --------
+    deltaq: Field
+    """
+    deltaR = np.abs(sim.grid.r - sim.binary.a_bin)
+    deltaq = np.max((sim.gas.Hp, deltaR))
+    return deltaq 
+
+def Lambda(sim):
+    """Funcation calculates the rate of specific angular momentum
+    transfering from the secondary to the disc
+    
+    Eq. 3 in Alexander+2011
+
+    Parameters:
+    -----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns:
+    --------
+    Lambda: Field
+    
+    """
+
+    return gas_f.Lambda(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltaq)
 
 
 def _f_impl_1_direct(x0, Y0, dx, *args, **kwargs):

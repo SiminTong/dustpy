@@ -72,7 +72,10 @@ class Simulation(Frame):
                                                                   "R": 2.*c.R_sun,
                                                                   "T": 5772.,
                                                                   }
-                                                               )
+                                                               ),
+                                       "binary": SimpleNamespace(**{"M2": 0.* c.M_sun,
+                                                                    "a_bin": 1.*c.au
+                                                                    })
                                        }
                                     )
 
@@ -177,9 +180,9 @@ class Simulation(Frame):
         self.gas.v.rad = None
         self.gas.v.visc = None
         self.gas.v.wind = None
-        self.gas.v.updater = ["wind", "visc", "rad"]
+        self.gas.v.updater = ["wind", "visc", "tidal", "rad"]
         self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
-                            "rho", "n", "mfp", "P", "eta", "S"]
+                            "rho", "deltaq", "Lambda", "n", "mfp", "P", "eta", "S"]
 
         # Grid quantities
         self.grid = Group(self, description="Grid quantities")
@@ -200,8 +203,14 @@ class Simulation(Frame):
         self.star.T = None
         self.star.updater = ["M", "R", "T", "L"]
 
+        # binary quantites:
+        self.binary = Group(self, description='binary quantities')
+        self.binary.M2 = None
+        self.binary.a_bin = None
+        self.binary.updater = ["M2", "a_bin"]
+
         # Updater of frame object
-        self.updater = ["star", "grid", "gas", "dust"]
+        self.updater = ["star", "grid", "binary", "gas", "dust"]
 
         self.t = None
 
@@ -409,6 +418,9 @@ class Simulation(Frame):
 
         # DUST QUANTITIES
         self._initializedust()
+
+        # BINARY QUANTITIES
+        self._initializebinary()
 
         # INTEGRATOR
         if self.integrator is None:
@@ -785,12 +797,26 @@ class Simulation(Frame):
             self.gas.v.wind = Field(self, np.zeros(shape1),
                                     description = "MHD wind velocity [cm/s]")
             self.gas.v.wind.updater = std.gas.vwind
-        #TODO: write std.gas.vwind
+        # Tidal truncation-induced radial velocity
+        if self.gas.v.tidal is None:
+            self.gas.v.tidal = Field(self, np.zeros(shape1),
+                                    description = "tidal truncation induced velocity [cm/s]")
+            self.gas.v.tidal.updater = std.gas.vtidal
         # Radial gas velocity
         if self.gas.v.rad is None:
             self.gas.v.rad = Field(self, np.zeros(shape1),
                                    description="Radial velocity [cm/s]")
             self.gas.v.rad.updater = std.gas.vrad
+
+        #delta q (length scale in the binary system)
+        if self.gas.deltaq is None:
+            self.gas.deltaq = Field(self, np.zeros(shape1), 
+                                    description='Distance to the secondary [cm]')
+            self.gas.deltaq.updater = std.gas.deltaq
+        if self.gas.Lambda is None:
+            self.gas.Lambda = Field(self, np.zeros(shape1),
+                                    description='rate of specific angular momentum')
+            self.gas.Lambda.updater = std.gas.Lambda
         # Hidden fields
         # We store the old values of the surface density in a hidden field
         # to calculate the fluxes through the boundaries.
@@ -858,6 +884,22 @@ class Simulation(Frame):
                                 description="Effective temperature [K]")
         # Initialize stellar quantities
         self.star.update()
+
+    def _initializebinary(self):
+        '''functions to initialize the binary system'''
+        # binary stellar mass
+        if self.binary.M2 is None:
+            self.binary.M2 = Field(self, self.ini.binary.M2, 
+                                    description="Mass [g]")
+        # binary separation
+        if self.binary.a_bin is None:
+            self.binary.a_bin = Field(self, self.ini.binary.a_bin,
+                                    description="semi major axis [cm]")
+        # binary mass ratio (secondary/primary)
+        if self.binary.q is None:
+            self.binary.q = Field(self, self.ini.binary.M2/self.ini.star.M, 
+                                description="Mass ratio")
+        
 
     def setdustintegrator(self, scheme="explicit", method="cash-karp"):
         """Function sets the dust integrator.

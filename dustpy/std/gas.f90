@@ -608,7 +608,7 @@ subroutine timestep(S, Sigma, SigmaFloor, dt, Nr)
 end subroutine timestep
 
 
-subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, v, Nr)
+subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, vt, v, Nr)
    ! Function calculates the radial gas velocity.
    !
    ! Parameters
@@ -619,6 +619,8 @@ subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, v, Nr)
    ! OmegaK(Nr) : Keplerian frequency
    ! r(Nr) : Radial grid cell centers
    ! vv(Nr) : Viscous gas velocity
+   ! vw(Nr): wind-driven velocity
+   ! vt(Nr): velocity induced by tidal truncation
    ! Nr : Number of radial grid cells
    !
    ! Returns
@@ -634,13 +636,14 @@ subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, v, Nr)
    double precision, intent(in)  :: r(Nr)
    double precision, intent(in)  :: vv(Nr)
    double precision, intent(in)  :: vw(Nr)
+   double precision, intent(in)  :: vt(Nr)
    double precision, intent(out) :: v(Nr)
    integer,          intent(in)  :: Nr
 
    double precision :: vb(Nr)
 
    vb(:) = 2.d0 * eta(:) * r(:) * OmegaK(:)
-   v(:) = A(:)*vv(:) + B(:)*vb(:) + vw(:)
+   v(:) = A(:)*vv(:) + B(:)*vb(:) + vw(:) + vt(:)
 
 end subroutine v_rad
 
@@ -680,6 +683,49 @@ subroutine v_wind(nu_dw, r, ri, vwind, Nr)
    !BC for vvisc: constant slope; we didn't impose any BC for MHD winds!
 
 end subroutine v_wind
+
+subroutine v_tidal(r, ri, lambda_,  Mstar, vt, Nr)
+   ! Function calculates the radial velocity caused by binary tidal truncation.
+   ! Mass flux is linearly interpolated on grid cell interfaces.
+   !
+   ! Parameters
+   ! ----------
+   ! lambda_ : rate of specific angular momentum
+   ! transferring from secondary to the disc
+   ! Mstar: primary stellar mass
+   ! r(Nr) : Radial grid cell centers
+   ! ri(Nr+1) : Radial grid cell interfaces
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! vt(Nr) : Radial wind velocity
+
+   implicit none
+
+   double precision, intent(in)  :: lambda_(Nr)
+   double precision, intent(in)  :: r(Nr)
+   double precision, intent(in)  :: ri(Nr+1)
+   double precision, intent(in)  :: Mstar
+   double precision, intent(out) :: vt(Nr) 
+   integer,          intent(in)  :: Nr
+
+   double precision :: arg(Nr)
+   double precision :: argi(Nr+1)
+
+   integer :: ir
+
+   use constants, only: G
+
+   arg(:) = 2.d0 * lambda_(:) * SQRT(r(:)) / SQRT(G*Mstar)
+
+   call interp1d(ri, r, arg, argi, Nr)
+
+
+   vt(:)  = argi(1:Nr)
+   !BC for vvisc: constant slope; we didn't impose any BC for MHD winds!
+
+end subroutine v_tidal
 
 
 
@@ -781,3 +827,35 @@ subroutine viscosity_dw(alpha_dw, cs, Hp, nu_dw, Nr)
    nu_dw(:) = alpha_dw(:) * cs(:) * Hp(:)
 
 end subroutine viscosity_dw
+
+
+subroutine Lambda(massq, Mstar, r, deltaq,  Nr, lambda_)
+   ! Subroutine calculates the rate of specific angular momentum 
+   ! transfer from the secondary to the disc.
+   !
+   ! Parameters
+   ! ----------
+   ! r(Nr) : radial grid
+   ! deltaq(Nr) : distance to the secondary
+   ! massq: mass ratio of secondary to the primary
+   ! Mstar: mass of the primary star
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! nu : Kinematic viscosity
+
+   implicit none
+
+   double precision, intent(in)  :: massq
+   double precision, intent(in)  :: Mstar
+   double precision, intent(in)  :: r(Nr)
+   double precision, intent(in)  :: deltaq(Nr)
+   double precision, intent(out) :: lambda_(Nr)
+   integer,          intent(in)  :: Nr
+
+   use constants, only: G
+
+   lambda_ = - 1.d0 * massq ** 2 * G * Mstar / (2.d0 * r(:)) * (r(:)/deltaq(:)) ** 4
+
+end subroutine Lambda

@@ -210,7 +210,8 @@ class Simulation(Frame):
         self.binary = Group(self, description='binary quantities')
         self.binary.M2 = None
         self.binary.a_bin = None
-        self.binary.updater = ["M2", "a_bin"]
+        self.binar.q = None 
+        self.binary.updater = ["M2", "q", "a_bin"]
 
         # Updater of frame object
         self.updater = ["star", "grid", "binary", "gas", "dust"]

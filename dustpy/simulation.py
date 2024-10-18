@@ -416,14 +416,16 @@ class Simulation(Frame):
         # GRID QUANTITIES
         self._initializegrid()
 
+        # BINARY QUANTITIES
+        self._initializebinary()
+
         # GAS QUANTITIES
         self._initializegas()
 
         # DUST QUANTITIES
         self._initializedust()
 
-        # BINARY QUANTITIES
-        self._initializebinary()
+        
 
         # INTEGRATOR
         if self.integrator is None:

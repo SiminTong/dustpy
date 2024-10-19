@@ -504,7 +504,8 @@ def deltaq(sim):
     deltaq: Field
     """
     deltaR = np.abs(sim.grid.r - sim.binary.a_bin)
-    deltaq = np.max((sim.gas.Hp, deltaR))
+    deltaq = np.where(deltaR>sim.gas.Hp, deltaR, sim.gas.Hp)
+    
     return deltaq 
 
 def Lambda(sim):

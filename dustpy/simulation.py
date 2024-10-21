@@ -181,11 +181,11 @@ class Simulation(Frame):
         self.gas.v.visc = None
         self.gas.v.wind = None
         self.gas.v.tidal= None
-        self.gas.deltaq = None
+        self.gas.deltap = None
         self.gas.Lambda = None
         self.gas.v.updater = ["wind", "visc", "tidal", "rad"]
         self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
-                            "rho", "deltaq", "Lambda", "n", "mfp", "P", "eta", "S"]
+                            "rho", "deltap", "Lambda", "n", "mfp", "P", "eta", "S"]
 
         # Grid quantities
         self.grid = Group(self, description="Grid quantities")
@@ -815,10 +815,10 @@ class Simulation(Frame):
             self.gas.v.rad.updater = std.gas.vrad
 
         #delta q (length scale in the binary system)
-        if self.gas.deltaq is None:
-            self.gas.deltaq = Field(self, np.zeros(shape1), 
+        if self.gas.deltap is None:
+            self.gas.deltap = Field(self, np.zeros(shape1), 
                                     description='Distance to the secondary [cm]')
-            self.gas.deltaq.updater = std.gas.deltaq
+            self.gas.deltap.updater = std.gas.deltap
         if self.gas.Lambda is None:
             self.gas.Lambda = Field(self, np.zeros(shape1),
                                     description='rate of specific angular momentum')

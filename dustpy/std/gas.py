@@ -489,7 +489,7 @@ def vvisc(sim):
         Viscous radial gas velocity"""
     return gas_f.v_visc(sim.gas.Sigma, sim.gas.nu, sim.grid.r, sim.grid.ri)
 
-def deltaq(sim):
+def deltap(sim):
     """Funcation calculates the distance to the secondary.
     
     Eq. 4 in Alexander+2011
@@ -504,9 +504,9 @@ def deltaq(sim):
     deltaq: Field
     """
     deltaR = np.abs(sim.grid.r - sim.binary.a_bin)
-    deltaq = np.where(deltaR>sim.gas.Hp, deltaR, sim.gas.Hp)
+    deltap = np.where(deltaR>sim.gas.Hp, deltaR, sim.gas.Hp)
     
-    return deltaq 
+    return deltap
 
 def Lambda(sim):
     """Funcation calculates the rate of specific angular momentum
@@ -525,7 +525,8 @@ def Lambda(sim):
     
     """
 
-    return gas_f.lambdaa(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltaq)
+    return gas_f.lambdaa(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltap, sim.binary.a_bin)
+
 
 
 def _f_impl_1_direct(x0, Y0, dx, *args, **kwargs):

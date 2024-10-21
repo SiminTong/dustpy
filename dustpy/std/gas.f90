@@ -829,7 +829,7 @@ subroutine viscosity_dw(alpha_dw, cs, Hp, nu_dw, Nr)
 end subroutine viscosity_dw
 
 
-subroutine lambdaa(massq, Mstar, r, deltaq,  Nr, lambda_)
+subroutine lambdaa(massq, Mstar, r, deltap, a_bin, Nr, lambda_)
    ! Subroutine calculates the rate of specific angular momentum 
    ! transfer from the secondary to the disc.
    !
@@ -840,10 +840,11 @@ subroutine lambdaa(massq, Mstar, r, deltaq,  Nr, lambda_)
    ! massq: mass ratio of secondary to the primary
    ! Mstar: mass of the primary star
    ! Nr : Number of radial grid cells
+   ! a_bin: binary separation
    !
    ! Returns
    ! -------
-   ! nu : Kinematic viscosity
+   ! lambda
 
    use constants, only: G
 
@@ -852,11 +853,63 @@ subroutine lambdaa(massq, Mstar, r, deltaq,  Nr, lambda_)
    double precision, intent(in)  :: massq
    double precision, intent(in)  :: Mstar
    double precision, intent(in)  :: r(Nr)
-   double precision, intent(in)  :: deltaq(Nr)
+   double precision, intent(in)  :: a_bin
+   double precision, intent(in)  :: deltap(Nr)
    double precision, intent(out) :: lambda_(Nr)
    integer,          intent(in)  :: Nr
 
+   double precision :: sign_ar(Nr)
 
-   lambda_ = - 1.d0 * massq ** 2 * G * Mstar / (2.d0 * r(:)) * (r(:)/deltaq(:)) ** 4
+   integer :: ir
+
+   !calculates the sign (minus/plus) for the torque exerted by the secondary
+
+   do ir=1, Nr
+      if (r(ir) .GT. a_bin) then
+         sign_ar(ir) = 1.d0
+      else if (r(ir) .LT. a_bin) then 
+         sign_ar(ir) = -1.d0 
+      else 
+         sign_ar(ir) = 0.d0
+      end if 
+   end do
+
+
+   lambda_ = sign_ar * massq ** 2 * G * Mstar / (2.d0 * r(:)) * (r(:)/deltap(:)) ** 4
 
 end subroutine lambdaa
+
+
+!subroutine sgn(r, a_bin, Nr, sign_ar)
+   ! Subroutine calculates the sign (minus/plus) for the torque exerted by the secondary
+   !
+   ! Parameters
+   ! ----------
+   ! r(Nr) : radial grid
+   ! a_bin: distance to the secondary
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! sign_ar
+
+!   implicit none
+
+!   double precision, intent(in)  :: r(Nr)
+!   double precision, intent(in)  :: a_bin
+!   double precision, intent(out) :: sign_ar(Nr)
+!   integer,          intent(in)  :: Nr
+
+!   integer :: ir
+
+!   do ir=1, Nr
+!      if (r(ir) .GT. a_bin) then
+!         sign_ar(ir) = 1.d0
+!      else if (r(ir) .LT. a_bin) then 
+!         sign_ar(ir) = -1.d0 
+!      else 
+!         sign_ar(ir) = 0.d0
+!      end if 
+!   end do
+
+!end subroutine sgn

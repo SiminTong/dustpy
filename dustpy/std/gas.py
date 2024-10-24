@@ -525,7 +525,12 @@ def Lambda(sim):
     
     """
 
-    return gas_f.lambdaa(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltap, sim.binary.a_bin)
+    torque_ = gas_f.lambdaa(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltap, sim.binary.a_bin)
+    # set a maximum value for the torque exerted by the companion
+    torq_cf = sim.gas.torq_cutoff
+    torque = np.where(np.abs(torque_)<torq_cf, torque_, torq_cf* torque_/np.abs(torque_))
+
+    return torque
 
 
 

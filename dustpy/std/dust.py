@@ -524,7 +524,7 @@ def MRN_distribution(sim):
     else:
         # Calculating pressure gradient
         P = sim.gas.P
-        Pi = dust_f.interp1d(sim.grid.ri, sim.grid.r, P)
+        Pi = np.interp(sim.grid.ri, sim.grid.r, P)
         gamma = (Pi[1:] - Pi[:-1]) / (sim.grid.ri[1:] - sim.grid.ri[:-1])
         gamma = np.abs(gamma)
         # Exponent of pressure gradient
@@ -784,8 +784,7 @@ def coagulation_parameters(sim):
     cstick, cstick_ind, A, eps, klf, krm, phi = dust_f.coagulation_parameters(sim.ini.dust.erosionMassRatio,
                                                                               sim.ini.dust.excavatedMass,
                                                                               sim.ini.dust.fragmentDistribution,
-                                                                              sim.grid.m,
-                                                                              int(sim.grid.Nr))
+                                                                              sim.grid.m)
     return cstick, cstick_ind, A, eps, klf, krm, phi
 
 

@@ -11,11 +11,11 @@ import dustpy.constants as c
 
 from dustpy import std
 
-from dustpy.utils import hdf5writer
+from simframe.io.writers import hdf5writer
 from dustpy.utils.boundary import Boundary
+from dustpy.utils.simplenamespace import SimpleNamespace
 
 import numpy as np
-from types import SimpleNamespace
 
 
 class Simulation(Frame):
@@ -46,13 +46,12 @@ class Simulation(Frame):
                                                                   "excavatedMass": 1.,
                                                                   "fragmentDistribution": -11/6,
                                                                   "rhoMonomer": 1.67,
-                                                                  "vfrag": 100.,
                                                                   "vfrag_distrib": False
+                                                                  "vFrag": 100.
                                                                   }
                                                                ),
                                        "gas": SimpleNamespace(**{"alpha": 1.e-3,
                                                                  "alpha_dw": 0.,
-                                                                 "gamma": 1.4,
                                                                  "Mdisk": 0.05*c.M_sun,
                                                                  "mu": 2.3*c.m_p,
                                                                  "SigmaExp": -1.,
@@ -159,7 +158,6 @@ class Simulation(Frame):
         self.gas.cs = None
         self.gas.eta = None
         self.gas.Fi = None
-        self.gas.gamma = None
         self.gas.Hp = None
         self.gas.mfp = None
         self.gas.mu = None
@@ -176,6 +174,10 @@ class Simulation(Frame):
         self.gas.Sigma = None
         self.gas.SigmaFloor = None
         self.gas.T = None
+        self.gas.torque = Group(self, description="Torque parameters")
+        self.gas.torque.Lambda = None
+        self.gas.torque.v = None
+        self.gas.torque.updater = ["Lambda", "v"]
         self.gas.v = Group(self, description="Velocities")
         self.gas.v.rad = None
         self.gas.v.visc = None
@@ -185,8 +187,9 @@ class Simulation(Frame):
         self.gas.torq_cutoff = None
         self.gas.Lambda = None
         self.gas.v.updater = ["wind", "visc", "tidal", "rad"]
-        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
+        self.gas.updater = ["mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
                             "rho", "deltap", "torq_cutoff", "Lambda", "n", "mfp", "P", "eta", "S"]
+
 
         # Grid quantities
         self.grid = Group(self, description="Grid quantities")
@@ -591,14 +594,15 @@ class Simulation(Frame):
         # Velocities
            # add a distribution for the fragmentation velocity 
         if (self.dust.v.frag is None) & (not self.ini.dust.vfrag_distrib):
-            vfrag = self.ini.dust.vfrag * np.ones(shape1)
+            vFrag = self.ini.dust.vfrag * np.ones(shape1)
             self.dust.v.frag = Field(
-                self, vfrag, description="Fragmentation velocity [cm/s]")
+                self, vFrag, description="Fragmentation velocity [cm/s]")
         if (self.dust.v.frag is None) & (self.ini.dust.vfrag_distrib):
             vfrag = self.ini.dust.vfrag * np.ones(shape3)
             self.dust.v.frag = Field(
-            self, vfrag, description="Fragmentation velocity [cm/s]")
+            self, vFrag, description="Fragmentation velocity [cm/s]")
             self.dust.v.frag.updater = std.dust.v_frag_distrib
+
         if self.dust.v.rel.azi is None:
             self.dust.v.rel.azi = Field(self, np.zeros(
                 shape3), description="Relative azimuthal velocity [cm/s]")
@@ -706,8 +710,8 @@ class Simulation(Frame):
         # Sound speed
         if self.gas.cs is None:
             self.gas.cs = Field(self, np.zeros(shape1),
-                                description="Sound speed [cm/s]")
-            self.gas.cs.updater = std.gas.cs_adiabatic
+                                description="Isothermal sound speed [cm/s]")
+            self.gas.cs.updater = std.gas.cs_isothermal
         # Pressure gradient parameter
         if self.gas.eta is None:
             self.gas.eta = Field(self, np.zeros(
@@ -718,11 +722,6 @@ class Simulation(Frame):
             self.gas.Fi = Field(self, np.zeros(shape1p1),
                                 description="Gas flux interfaces [g/cm/s]")
             self.gas.Fi.updater = std.gas.Fi
-        # Adiabatic index
-        if self.gas.gamma is None:
-            gamma = self.ini.gas.gamma * np.ones(shape1)
-            self.gas.gamma = Field(self, gamma,
-                                   description="Adiabatic index")
         # Pressure scale height
         if self.gas.Hp is None:
             self.gas.Hp = Field(self, np.zeros(shape1),
@@ -792,6 +791,14 @@ class Simulation(Frame):
             self.gas.T = Field(self, np.zeros(shape1),
                                description="Temperature [K]")
             self.gas.T.updater = std.gas.T_passive
+        # Torque parameters
+        if self.gas.torque.Lambda is None:
+            self.gas.torque.Lambda = Field(self, np.zeros(shape1), 
+                                           description="Specific angular momentum injection rate by torque [cm²/s²]")
+        if self.gas.torque.v is None:
+            self.gas.torque.v = Field(self, np.zeros(shape1),
+                                      description="Effective velocity imposed by torque [cm/s]")
+            self.gas.torque.v.updater = std.gas.vtorque
         # Velocities
         # Viscous accretion velocity
         if self.gas.v.visc is None:

@@ -661,6 +661,8 @@ subroutine v_wind(nu_dw, r, ri, vwind, Nr)
    ! -------
    ! vwind(Nr) : Radial wind velocity
 
+   use interpolation, only: interp1d
+
    implicit none
 
    double precision, intent(in)  :: nu_dw(Nr)
@@ -701,6 +703,7 @@ subroutine v_tidal(r, ri, lambda_,  Mstar, vt, Nr)
    ! vt(Nr) : Radial wind velocity
 
    use constants, only: G
+   use interpolation, only: interp1d
 
    implicit none
 

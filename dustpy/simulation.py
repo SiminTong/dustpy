@@ -753,7 +753,6 @@ class Simulation(Frame):
             self.gas.nu_dw = Field(self, np.zeros(shape1),
                                    description="Viscosity-equivalent for MHD winds")
             self.gas.nu_dw.updater = std.gas.nu_dw
-        #TODO: write std.gas.nu_dw
         # Midplane pressure
         if self.gas.P is None:
             self.gas.P = Field(self, np.zeros(shape1),

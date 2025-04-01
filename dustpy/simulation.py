@@ -46,7 +46,7 @@ class Simulation(Frame):
                                                                   "excavatedMass": 1.,
                                                                   "fragmentDistribution": -11/6,
                                                                   "rhoMonomer": 1.67,
-                                                                  "vfrag_distrib": False
+                                                                  "vfrag_distrib": False,
                                                                   "vFrag": 100.
                                                                   }
                                                                ),

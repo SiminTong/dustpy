@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
 
-def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits=True, show_St1=True):
+def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits=True, show_St1=True, save=False):
     """Simple plotting script for data files or simulation objects.
 
     Parameters
@@ -33,7 +33,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
 
     # Fix indices if necessary
     it = np.maximum(0, it)
-    it = np.minimum(it, data.Nt-1)
+    it = np.minimum(it, data2.Nt-1)
     it = int(it)
     im = np.maximum(0, im)
     im = np.minimum(im, data.grid.Nm-1)
@@ -53,6 +53,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax00 = fig.add_subplot(231)
     ax01 = fig.add_subplot(232)
     ax02 = fig.add_subplot(233)
+    ax02r = ax02.twinx()
     ax10 = fig.add_subplot(234)
     ax11 = fig.add_subplot(235)
     ax11r = ax11.twinx()
@@ -103,6 +104,7 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax00.set_yscale("log")
     ax00.set_xlabel("Distance from star [AU]")
     ax00.set_ylabel("Particle mass [g]")
+    ax00.set_title('t= %.3f Myr' %(data2.t[it]/c.year/1e6)) # add the evolution time
 
     ax01.loglog(data.grid.m[it, ...], data.dust.sigma[it, ir, :], c="C3")
     ax01.axvline(data.grid.m[it, im], color="#AAAAAA", lw=1, ls="--")
@@ -113,7 +115,27 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax01.set_xlabel("Particle mass [g]")
     ax01.set_ylabel(r"$\sigma_\mathrm{d}$ [g/cm²]")
 
-    if data.Nt < 3:
+    # convert particle mass to particle size
+    rho_int = 1.67 # units: gcm-3
+    def mass2size(m):
+        '''convert particle mass to partice size by assuming 
+        default internal density value (1.67 gcm-3)'''
+        S = (3 * m / (4 * np.pi * rho_int)) ** (1/3)
+        return ["%.1e" %s for s in S]
+
+
+    ax01_2 = ax01.twiny()
+    ax01_2.set_xscale('log')
+    m_max = data2.m[it,-1]
+    m_min = data2.m[it,0]
+    ax01_2.set_xlim(m_min, m_max)
+    tick_num = 4
+    x2_ticks = np.logspace(np.log10(m_min), np.log10(m_max), tick_num)
+    ax01_2.set_xticks(x2_ticks)
+    ax01_2.set_xticklabels(mass2size(x2_ticks))
+    ax01_2.set_xlabel("Particle Size [cm]")
+
+    if data2.Nt < 3:
         ax02.set_xticks([0., 1.])
         ax02.set_yticks([0., 1.])
         ax02.text(0.5,
@@ -126,9 +148,13 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
         ax02.loglog(data.t/c.year, data.gas.M/c.M_sun, c="C0", label="Gas")
         ax02.loglog(data.t/c.year, data.dust.M /
                     c.M_sun, c="C1", label="Dust")
-        ax02.axvline(data.t[it]/c.year, c="#AAAAAA", lw=1, ls="--")
-        ax02.set_xlim(data.t[1]/c.year, data.t[-1]/c.year)
+        ax02.axvline(data2.t[it]/c.year, c="#AAAAAA", lw=1, ls="--")
+        ax02.set_xlim(data2.t[1]/c.year, data2.t[-1]/c.year)
         ax02.set_ylim(10.**(Mmax-6.), 10.**Mmax)
+        ax02r.loglog(data2.t/c.year, data2.Mdust/data2.Mgas, c='grey', alpha=0.8)
+        ax02r.axhline(1e-2, ls='dashed', alpha=0.3, color='grey')
+        ax02r.set_ylim(1.e-3, 1.e1)
+        ax02r.set_ylabel('Dust-to-gas ratio')
         ax02.legend()
     ax02.set_xlabel("Time [yrs]")
     ax02.set_ylabel(r"Mass [$M_\odot$]")
@@ -155,6 +181,10 @@ def panel(data, filename="data", extension="hdf5", im=0, ir=0, it=0, show_limits
     ax11r.set_ylabel("Dust-to-gas ratio")
 
     fig.set_layout_engine("tight")
+
+    if save == True:
+        if os.path.isdir(data):
+            plt.savefig(data+'dustpy_overview_'+str(it)+'.png', dpi=300, bbox_inches='tight')
 
     plt.show()
 

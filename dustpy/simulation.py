@@ -46,14 +46,18 @@ class Simulation(Frame):
                                                                   "excavatedMass": 1.,
                                                                   "fragmentDistribution": -11/6,
                                                                   "rhoMonomer": 1.67,
-                                                                  "vFrag": 100.
+                                                                  "vFrag": 100.,
+                                                                  "vfrag_distrib": False
                                                                   }
                                                                ),
                                        "gas": SimpleNamespace(**{"alpha": 1.e-3,
+                                                                 "alpha_dw": 0.,
+                                                                 "gamma": 1.0,
                                                                  "Mdisk": 0.05*c.M_sun,
                                                                  "mu": 2.3*c.m_p,
                                                                  "SigmaExp": -1.,
-                                                                 "SigmaRc": 60.*c.au
+                                                                 "SigmaRc": 60.*c.au,
+                                                                 "leverarm": 3.
                                                                  }
                                                               ),
                                        "grid": SimpleNamespace(**{"Nmbpd": 7,
@@ -68,7 +72,10 @@ class Simulation(Frame):
                                                                   "R": 2.*c.R_sun,
                                                                   "T": 5772.,
                                                                   }
-                                                               )
+                                                               ),
+                                       "binary": SimpleNamespace(**{"M2": 0.* c.M_sun,
+                                                                    "a_bin": 1.*c.au
+                                                                    })
                                        }
                                     )
 
@@ -144,6 +151,8 @@ class Simulation(Frame):
         # Gas quantities
         self.gas = Group(self, description="Gas quantities")
         self.gas.alpha = None
+        self.gas.alpha_dw = None
+        self.gas.leverarm = None
         self.gas.boundary = Group(self, description="Boundary conditions")
         self.gas.boundary.inner = None
         self.gas.boundary.outer = None
@@ -155,6 +164,7 @@ class Simulation(Frame):
         self.gas.mu = None
         self.gas.n = None
         self.gas.nu = None
+        self.gas.nu_dw = None
         self.gas.P = None
         self.gas.rho = None
         self.gas.S = Group(self, description="Source terms")
@@ -172,9 +182,14 @@ class Simulation(Frame):
         self.gas.v = Group(self, description="Velocities")
         self.gas.v.rad = None
         self.gas.v.visc = None
-        self.gas.v.updater = ["visc", "rad"]
-        self.gas.updater = ["mu", "T", "alpha", "cs", "Hp", "nu",
-                            "rho", "n", "mfp", "P", "eta", "torque", "S"]
+        self.gas.v.wind = None
+        self.gas.v.tidal= None
+        self.gas.deltap = None
+        self.gas.torq_cutoff = None
+        self.gas.Lambda = None
+        self.gas.v.updater = ["wind", "visc", "tidal", "rad"]
+        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
+                            "rho", "deltap", "torq_cutoff", "Lambda", "n", "mfp", "P", "eta", "S"]
 
         # Grid quantities
         self.grid = Group(self, description="Grid quantities")
@@ -195,8 +210,15 @@ class Simulation(Frame):
         self.star.T = None
         self.star.updater = ["M", "R", "T", "L"]
 
+        # binary quantites:
+        self.binary = Group(self, description='binary quantities')
+        self.binary.M2 = None
+        self.binary.a_bin = None
+        self.binary.q = None 
+        self.binary.updater = ["M2", "q", "a_bin"]
+
         # Updater of frame object
-        self.updater = ["star", "grid", "gas", "dust"]
+        self.updater = ["star", "grid", "binary", "gas", "dust"]
 
         self.t = None
 
@@ -399,11 +421,16 @@ class Simulation(Frame):
         # GRID QUANTITIES
         self._initializegrid()
 
+        # BINARY QUANTITIES
+        self._initializebinary()
+
         # GAS QUANTITIES
         self._initializegas()
 
         # DUST QUANTITIES
         self._initializedust()
+
+        
 
         # INTEGRATOR
         if self.integrator is None:
@@ -565,10 +592,16 @@ class Simulation(Frame):
                 shape2), description="Stokes number")
             self.dust.St.updater = std.dust.St_Epstein_StokesI
         # Velocities
-        if self.dust.v.frag is None:
-            vFrag = self.ini.dust.vFrag * np.ones(shape1)
+           # add a distribution for the fragmentation velocity 
+        if (self.dust.v.frag is None) & (not self.ini.dust.vfrag_distrib):
+            vfrag = self.ini.dust.vfrag * np.ones(shape1)
             self.dust.v.frag = Field(
                 self, vFrag, description="Fragmentation velocity [cm/s]")
+        if (self.dust.v.frag is None) & (self.ini.dust.vfrag_distrib):
+            vfrag = self.ini.dust.vfrag * np.ones(shape3)
+            self.dust.v.frag = Field(
+            self, vfrag, description="Fragmentation velocity [cm/s]")
+            self.dust.v.frag.updater = std.dust.v_frag_distrib
         if self.dust.v.rel.azi is None:
             self.dust.v.rel.azi = Field(self, np.zeros(
                 shape3), description="Relative azimuthal velocity [cm/s]")
@@ -663,6 +696,16 @@ class Simulation(Frame):
             alpha = self.ini.gas.alpha * np.ones(shape1)
             self.gas.alpha = Field(
                 self, alpha, description="Turbulent alpha parameter")
+        # MHD wind alpha parameter
+        if self.gas.alpha_dw is None:
+            alpha_dw = self.ini.gas.alpha_dw * np.ones(shape1)
+            self.gas.alpha_dw = Field(
+                self, alpha_dw, description="MHD wind alpha parameter")
+        # lever arm for the wind component
+        if self.gas.leverarm is None:
+            leverarm = self.ini.gas.leverarm 
+            self.gas.leverarm = Field(
+                self, leverarm, description="lever arm of MHD winds")
         # Sound speed
         if self.gas.cs is None:
             self.gas.cs = Field(self, np.zeros(shape1),
@@ -703,6 +746,12 @@ class Simulation(Frame):
             self.gas.nu = Field(self, np.zeros(shape1),
                                 description="Kinematic viscosity [cm²/s]")
             self.gas.nu.updater = std.gas.nu
+        # Wind-equivalent viscosity
+        if self.gas.nu_dw is None:
+            self.gas.nu_dw = Field(self, np.zeros(shape1),
+                                   description="Viscosity-equivalent for MHD winds")
+            self.gas.nu_dw.updater = std.gas.nu_dw
+        #TODO: write std.gas.nu_dw
         # Midplane pressure
         if self.gas.P is None:
             self.gas.P = Field(self, np.zeros(shape1),
@@ -756,11 +805,34 @@ class Simulation(Frame):
             self.gas.v.visc = Field(self, np.zeros(shape1),
                                     description="Viscous accretion velocity [cm/s]")
             self.gas.v.visc.updater = std.gas.vvisc
+        # Wind velocity
+        if self.gas.v.wind is None:
+            self.gas.v.wind = Field(self, np.zeros(shape1),
+                                    description = "MHD wind velocity [cm/s]")
+            self.gas.v.wind.updater = std.gas.vwind
+        # Tidal truncation-induced radial velocity
+        if self.gas.v.tidal is None:
+            self.gas.v.tidal = Field(self, np.zeros(shape1),
+                                    description = "tidal truncation induced velocity [cm/s]")
+            self.gas.v.tidal.updater = std.gas.vtidal
         # Radial gas velocity
         if self.gas.v.rad is None:
             self.gas.v.rad = Field(self, np.zeros(shape1),
                                    description="Radial velocity [cm/s]")
             self.gas.v.rad.updater = std.gas.vrad
+
+        #delta q (length scale in the binary system)
+        if self.gas.deltap is None:
+            self.gas.deltap = Field(self, np.zeros(shape1), 
+                                    description='Distance to the secondary [cm]')
+            self.gas.deltap.updater = std.gas.deltap
+        if self.gas.torq_cutoff is None:
+            self.gas.torq_cutoff = Field(self, 1e100, 
+                                    description='tidal truncation maximum torque')
+        if self.gas.Lambda is None:
+            self.gas.Lambda = Field(self, np.zeros(shape1),
+                                    description='rate of specific angular momentum')
+            self.gas.Lambda.updater = std.gas.Lambda
         # Hidden fields
         # We store the old values of the surface density in a hidden field
         # to calculate the fluxes through the boundaries.
@@ -828,6 +900,22 @@ class Simulation(Frame):
                                 description="Effective temperature [K]")
         # Initialize stellar quantities
         self.star.update()
+
+    def _initializebinary(self):
+        '''functions to initialize the binary system'''
+        # binary stellar mass
+        if self.binary.M2 is None:
+            self.binary.M2 = Field(self, self.ini.binary.M2, 
+                                    description="Mass [g]")
+        # binary separation
+        if self.binary.a_bin is None:
+            self.binary.a_bin = Field(self, self.ini.binary.a_bin,
+                                    description="semi major axis [cm]")
+        # binary mass ratio (secondary/primary)
+        if self.binary.q is None:
+            self.binary.q = Field(self, self.ini.binary.M2/self.ini.star.M, 
+                                description="Mass ratio")
+        self.binary.update()
 
     def setdustintegrator(self, scheme="explicit", method="cash-karp"):
         """Function sets the dust integrator.

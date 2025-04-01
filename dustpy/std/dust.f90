@@ -1055,6 +1055,54 @@ subroutine pfrag(vrel, vfrag, pf, Nr, Nm)
 
 end subroutine pfrag
 
+subroutine pfrag_3(vrel, vfrag, pf, Nr, Nm)
+  ! Subroutine calculates the fragmentation probability (with 3D vfrag).
+  ! It is assuming a Maxwell-Boltzmann velocity distribution.
+  ! 
+  ! Parameters
+  ! ----------
+  ! vrel(Nr, Nm, Nm) : Relative velocity
+  ! vfrag(Nr) : Fragmentation velocity
+  ! Nr : Number or radial grid cells
+  ! Nm : Number of mass bins
+  !
+  ! Returns
+  ! -------
+  ! pf(Nr, Nm, Nm) : Fragmentation probability in [0, 1]
+  !
+  ! Notes
+  ! -----
+  ! The sticking probability is ps = 1 - pf
+
+  implicit none
+
+  double precision, intent(in)  :: vrel(Nr, Nm, Nm)
+  double precision, intent(in)  :: vfrag(Nr, Nm, Nm)
+  double precision, intent(out) :: pf(Nr, Nm, Nm)
+  integer,          intent(in)  :: Nr
+  integer,          intent(in)  :: Nm
+  
+  double precision :: dum
+  integer :: ir
+  integer :: i
+  integer :: j
+
+  do i=1, Nm
+    do j=1, i
+      do ir=2, Nr-1
+        if(vrel(ir, j, i) .EQ. 0.d0) then
+          pf(ir, j, i) = 0.d0
+        else
+          dum = (vfrag(ir, j, i)/vrel(ir, j, i))**2
+          pf(ir, j, i) = (1.5d0*dum + 1.d0) * exp(-1.5d0*dum)
+        end if
+        pf(ir, i, j) = pf(ir, j, i)
+      end do
+    end do
+  end do
+
+end subroutine pfrag_3
+
 
 subroutine s_coag(cstick, cstick_ind, A, eps, klf, krm, phi, Kf, Ks, m, Sigma, SigmaFloor, S, Nr, Nm)
   ! Subroutine calculates the coagulation source terms.

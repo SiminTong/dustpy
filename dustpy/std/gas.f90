@@ -211,7 +211,7 @@ subroutine implicit_boundaries(dt, Fi, ri, Sigma, SigmaOld, ret, Nr)
 end subroutine implicit_boundaries
 
 
-subroutine jac_abc(area, nu, r, ri, v, A, B, C, Nr)
+subroutine jac_abc(area, nu, r, ri, v, wind_ext, A, B, C, Nr)
    ! Subroutine calculates the diagonals of the gas Jacobian for advection.
    !
    ! Parameters
@@ -239,6 +239,7 @@ subroutine jac_abc(area, nu, r, ri, v, A, B, C, Nr)
    double precision, intent(in)  :: r(Nr)
    double precision, intent(in)  :: ri(Nr+1)
    double precision, intent(in)  :: v(Nr)
+   double precision, intent(in)  :: wind_ext(Nr)
    double precision, intent(out) :: A(Nr)
    double precision, intent(out) :: B(Nr)
    double precision, intent(out) :: C(Nr)
@@ -288,8 +289,14 @@ subroutine jac_abc(area, nu, r, ri, v, A, B, C, Nr)
 
    ! Normailization
    A(:) = A(:) * Vinv(:)
-   B(:) = B(:) * Vinv(:)
+   B(:) = B(:) * Vinv(:) 
    C(:) = C(:) * Vinv(:)
+
+   do ir=2, Nr-1
+
+      B(ir) = B(ir) + wind_ext(ir)
+   
+   end do 
 
 end subroutine jac_abc
 
@@ -600,7 +607,7 @@ subroutine timestep(S, Sigma, SigmaFloor, dt, Nr)
 end subroutine timestep
 
 
-subroutine v_rad(A, B, eta, OmegaK, r, vv, vtor, v, Nr)
+subroutine v_rad(A, B, eta, OmegaK, r, vv, vw, vt, v, Nr)
    ! Function calculates the radial gas velocity.
    !
    ! Parameters
@@ -611,7 +618,8 @@ subroutine v_rad(A, B, eta, OmegaK, r, vv, vtor, v, Nr)
    ! OmegaK(Nr) : Keplerian frequency
    ! r(Nr) : Radial grid cell centers
    ! vv(Nr) : Viscous gas velocity
-   ! vtor(Nr) : Velocity contribution from torque
+   ! vw(Nr): wind-driven velocity
+   ! vt(Nr): velocity induced by tidal truncation
    ! Nr : Number of radial grid cells
    !
    ! Returns
@@ -626,16 +634,99 @@ subroutine v_rad(A, B, eta, OmegaK, r, vv, vtor, v, Nr)
    double precision, intent(in)  :: OmegaK(Nr)
    double precision, intent(in)  :: r(Nr)
    double precision, intent(in)  :: vv(Nr)
-   double precision, intent(in)  :: vtor(Nr)
+   double precision, intent(in)  :: vw(Nr)
+   double precision, intent(in)  :: vt(Nr)
    double precision, intent(out) :: v(Nr)
    integer,          intent(in)  :: Nr
 
    double precision :: vb(Nr)
 
    vb(:) = 2.d0 * eta(:) * r(:) * OmegaK(:)
-   v(:) = A(:)*vv(:) + B(:)*vb(:) + vtor(:)
+   v(:) = A(:)*vv(:) + B(:)*vb(:) + vw(:) + vt(:)
 
 end subroutine v_rad
+
+subroutine v_wind(nu_dw, r, ri, vwind, Nr)
+   ! Function calculates the radial wind velocity.
+   ! Mass flux is linearly interpolated on grid cell interfaces.
+   !
+   ! Parameters
+   ! ----------
+   ! nu_dw(Nr) : MHD wind-equvalent viscosity
+   ! r(Nr) : Radial grid cell centers
+   ! ri(Nr+1) : Radial grid cell interfaces
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! vwind(Nr) : Radial wind velocity
+
+   implicit none
+
+   double precision, intent(in)  :: nu_dw(Nr)
+   double precision, intent(in)  :: r(Nr)
+   double precision, intent(in)  :: ri(Nr+1)
+   double precision, intent(out) :: vwind(Nr)
+   integer,          intent(in)  :: Nr
+
+   double precision :: arg(Nr)
+   double precision :: argi(Nr+1)
+
+   integer :: ir
+
+   arg(:) = -1.5d0 * nu_dw(:) / r(:) !3/2
+   call interp1d(ri, r, arg, argi, Nr)
+
+
+   vwind(:)  = argi(1:Nr)
+   !BC for vvisc: constant slope; we didn't impose any BC for MHD winds!
+
+end subroutine v_wind
+
+subroutine v_tidal(r, ri, lambda_,  Mstar, vt, Nr)
+   ! Function calculates the radial velocity caused by binary tidal truncation.
+   ! Mass flux is linearly interpolated on grid cell interfaces.
+   !
+   ! Parameters
+   ! ----------
+   ! lambda_ : rate of specific angular momentum
+   ! transferring from secondary to the disc
+   ! Mstar: primary stellar mass
+   ! r(Nr) : Radial grid cell centers
+   ! ri(Nr+1) : Radial grid cell interfaces
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! vt(Nr) : Radial wind velocity
+
+   use constants, only: G
+
+   implicit none
+
+   double precision, intent(in)  :: lambda_(Nr)
+   double precision, intent(in)  :: r(Nr)
+   double precision, intent(in)  :: ri(Nr+1)
+   double precision, intent(in)  :: Mstar
+   double precision, intent(out) :: vt(Nr) 
+   integer,          intent(in)  :: Nr
+
+   double precision :: arg(Nr)
+   double precision :: argi(Nr+1)
+
+   integer :: ir
+
+   arg(:) = 2.d0 * lambda_(:) * SQRT(r(:)) / SQRT(G*Mstar)
+
+   call interp1d(ri, r, arg, argi, Nr)
+
+
+   vt(:)  = argi(1:Nr)
+   !BC for vvisc: constant slope; we didn't impose any BC for MHD winds!
+
+end subroutine v_tidal
+
+
 
 
 subroutine v_visc(Sigma, nu, r, ri, vvisc, Nr)
@@ -710,3 +801,116 @@ subroutine viscosity(alpha, cs, Hp, nu, Nr)
    nu(:) = alpha(:) * cs(:) * Hp(:)
 
 end subroutine viscosity
+
+
+subroutine viscosity_dw(alpha_dw, cs, Hp, nu_dw, Nr)
+   ! Subroutine calculates the kinematic viscosity.
+   !
+   ! Parameters
+   ! ----------
+   ! alpha(Nr) : Alpha viscosity parameter
+   ! cs(Nr) : sound speed
+   ! Hp(Nr) : Gas scale height
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! nu : Kinematic viscosity
+
+   implicit none
+
+   double precision, intent(in)  :: alpha_dw(Nr)
+   double precision, intent(in)  :: cs(Nr)
+   double precision, intent(in)  :: Hp(Nr)
+   double precision, intent(out) :: nu_dw(Nr)
+   integer,          intent(in)  :: Nr
+
+   nu_dw(:) = alpha_dw(:) * cs(:) * Hp(:)
+
+end subroutine viscosity_dw
+
+
+subroutine lambdaa(massq, Mstar, r, deltap, a_bin, Nr, lambda_)
+   ! Subroutine calculates the rate of specific angular momentum 
+   ! transfer from the secondary to the disc.
+   !
+   ! Parameters
+   ! ----------
+   ! r(Nr) : radial grid
+   ! deltaq(Nr) : distance to the secondary
+   ! massq: mass ratio of secondary to the primary
+   ! Mstar: mass of the primary star
+   ! Nr : Number of radial grid cells
+   ! a_bin: binary separation
+   !
+   ! Returns
+   ! -------
+   ! lambda
+
+   use constants, only: G
+
+   implicit none
+
+   double precision, intent(in)  :: massq
+   double precision, intent(in)  :: Mstar
+   double precision, intent(in)  :: r(Nr)
+   double precision, intent(in)  :: a_bin
+   double precision, intent(in)  :: deltap(Nr)
+   double precision, intent(out) :: lambda_(Nr)
+   integer,          intent(in)  :: Nr
+
+   double precision :: sign_ar(Nr)
+
+   integer :: ir
+
+   !calculates the sign (minus/plus) for the torque exerted by the secondary
+
+   do ir=1, Nr
+      if (r(ir) .GT. a_bin) then
+         sign_ar(ir) = 1.d0
+      else if (r(ir) .LT. a_bin) then 
+         sign_ar(ir) = -1.d0 
+      else 
+         sign_ar(ir) = 0.d0
+      end if 
+   end do
+
+
+   lambda_ = sign_ar * massq ** 2 * G * Mstar / (2.d0 * r(:)) * (r(:)/deltap(:)) ** 4
+
+end subroutine lambdaa
+
+
+!subroutine sgn(r, a_bin, Nr, sign_ar)
+   ! Subroutine calculates the sign (minus/plus) for the torque exerted by the secondary
+   !
+   ! Parameters
+   ! ----------
+   ! r(Nr) : radial grid
+   ! a_bin: distance to the secondary
+   ! Nr : Number of radial grid cells
+   !
+   ! Returns
+   ! -------
+   ! sign_ar
+
+!   implicit none
+
+!   double precision, intent(in)  :: r(Nr)
+!   double precision, intent(in)  :: a_bin
+!   double precision, intent(out) :: sign_ar(Nr)
+!   integer,          intent(in)  :: Nr
+
+!   integer :: ir
+
+!   do ir=1, Nr
+!      if (r(ir) .GT. a_bin) then
+!         sign_ar(ir) = 1.d0
+!      else if (r(ir) .LT. a_bin) then 
+!         sign_ar(ir) = -1.d0 
+!      else 
+!         sign_ar(ir) = 0.d0
+!      end if 
+!   end do
+
+!end subroutine sgn

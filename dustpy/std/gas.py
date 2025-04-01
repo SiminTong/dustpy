@@ -196,11 +196,8 @@ def jacobian(sim, x, *args, **kwargs):
 
     # Parameters
     nu = sim.gas.nu * sim.dust.backreaction.A
-    # Velocity contribution from dust back reaction
-    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK
-    # Velocity contribution from torque
-    v += sim.gas.torque.v
-
+    v = sim.dust.backreaction.B * 2. * sim.gas.eta * sim.grid.r * sim.grid.OmegaK + sim.gas.v.wind + sim.gas.v.tidal
+    wind_ext = -3. * sim.gas.cs**2.* sim.gas.alpha_dw/ (4. * (sim.gas.leverarm-1) * sim.grid.r**2. * sim.grid.OmegaK)
     # Helper variables for convenience
     r = sim.grid.r
     ri = sim.grid.ri
@@ -208,7 +205,7 @@ def jacobian(sim, x, *args, **kwargs):
     Nr = int(sim.grid.Nr)
 
     # Construct Jacobian
-    A, B, C = gas_f.jac_abc(area, nu, r, ri, v)
+    A, B, C = gas_f.jac_abc(area, nu, r, ri, v, wind_ext)
     row_hyd = np.hstack(
         (np.arange(Nr-1)+1, np.arange(Nr), np.arange(Nr-1)))
     col_hyd = np.hstack(
@@ -310,6 +307,25 @@ def nu(sim):
         Kinematic viscosity"""
     return gas_f.viscosity(
         sim.gas.alpha,
+        sim.gas.cs,
+        sim.gas.Hp
+    )
+
+def nu_dw(sim):
+    """Function calculates the wind-equivalent viscocity of the gas.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    nu_dw : Field
+        wind viscosity"""
+
+    return gas_f.viscosity_dw(
+        sim.gas.alpha_dw,
         sim.gas.cs,
         sim.gas.Hp
     )
@@ -422,9 +438,38 @@ def vrad(sim):
         sim.grid.OmegaK,
         sim.grid.r,
         sim.gas.v.visc,
-        sim.gas.torque.v,
+        sim.gas.v.wind,
+        sim.gas.v.tidal
     )
 
+def vwind(sim):
+    """Function calculates the radial gas velocity driven by MHD winds.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    vwind : Field
+         Radial gas velocity driven by MHD winds"""
+    return gas_f.v_wind(sim.gas.nu_dw, sim.grid.r, sim.grid.ri)
+
+def vtidal(sim):
+    """Function calculates the radial velocity caused by tidal truncation.
+
+    Parameters
+    ----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns
+    -------
+    vtidal : Field
+         Radial gas velocity caused by tidal truncation"""
+    return gas_f.v_tidal(sim.grid.r, sim.grid.ri, sim.gas.Lambda,  sim.star.M)
+    
 
 def vtorque(sim):
     """Function calculates the velocity contribution from a torque profile
@@ -454,6 +499,54 @@ def vvisc(sim):
     vvisc : Field
         Viscous radial gas velocity"""
     return gas_f.v_visc(sim.gas.Sigma, sim.gas.nu, sim.grid.r, sim.grid.ri)
+
+def deltap(sim):
+    """Funcation calculates the distance to the secondary.
+    
+    Eq. 4 in Alexander+2011
+
+    Parameters:
+    -----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns:
+    --------
+    deltaq: Field
+    """
+    deltaR = np.abs(sim.grid.r - sim.binary.a_bin)
+    deltap = np.where(deltaR>sim.gas.Hp, deltaR, sim.gas.Hp)
+    
+    return deltap
+
+def Lambda(sim):
+    """Funcation calculates the rate of specific angular momentum
+    transfering from the secondary to the disc
+    
+    Eq. 3 in Alexander+2011
+
+    Parameters:
+    -----------
+    sim : Frame
+        Parent simulation frame
+
+    Returns:
+    --------
+    Lambda: Field
+    
+    """
+
+    if sim.binary.q == 0:
+        torque = np.zeros(sim.grid.Nr)
+    else:
+
+        torque_ = gas_f.lambdaa(sim.binary.q, sim.star.M, sim.grid.r, sim.gas.deltap, sim.binary.a_bin)
+        # set a maximum value for the torque exerted by the companion
+        torq_cf = sim.gas.torq_cutoff
+        torque = np.where(np.abs(torque_)<torq_cf, torque_, torq_cf* torque_/np.abs(torque_))
+
+    return torque
+
 
 
 def _f_impl_1_direct(x0, Y0, dx, *args, **kwargs):

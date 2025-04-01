@@ -52,7 +52,6 @@ class Simulation(Frame):
                                                                ),
                                        "gas": SimpleNamespace(**{"alpha": 1.e-3,
                                                                  "alpha_dw": 0.,
-                                                                 "gamma": 1.0,
                                                                  "Mdisk": 0.05*c.M_sun,
                                                                  "mu": 2.3*c.m_p,
                                                                  "SigmaExp": -1.,
@@ -188,7 +187,7 @@ class Simulation(Frame):
         self.gas.torq_cutoff = None
         self.gas.Lambda = None
         self.gas.v.updater = ["wind", "visc", "tidal", "rad"]
-        self.gas.updater = ["gamma", "mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
+        self.gas.updater = ["mu", "T", "alpha", "alpha_dw", "leverarm", "cs", "Hp", "nu", "nu_dw",
                             "rho", "deltap", "torq_cutoff", "Lambda", "n", "mfp", "P", "eta", "S"]
 
         # Grid quantities

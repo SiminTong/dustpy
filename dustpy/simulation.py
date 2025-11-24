@@ -779,11 +779,11 @@ class Simulation(Frame):
                 self, 1.e-100*np.ones(shape1), description="Floor value of surface density [g/cm²]")
         # Surface density
         if self.gas.Sigma is None:
-            if self.gas.alpha_dw ==0:
+            if self.ini.gas.alpha_dw ==0:
                 SigmaGas = np.array(std.gas.lyndenbellpringle1974(
                     self.grid.r, self.ini.gas.SigmaRc, self.ini.gas.SigmaExp, self.ini.gas.Mdisk))
             else: 
-                SigmaGas = np.array(tabone2022(self.grid.r, self.ini.gas.SigmaRc, self.ini.gas.alpha, 
+                SigmaGas = np.array(std.gas.tabone2022(self.grid.r, self.ini.gas.SigmaRc, self.ini.gas.alpha, 
                                       self.ini.gas.alpha_dw, self.ini.gas.leverarm, self.ini.gas.Mdisk))
             SigmaGas = np.maximum(SigmaGas, self.gas.SigmaFloor)
             self.gas.Sigma = Field(self, SigmaGas,

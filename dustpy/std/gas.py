@@ -257,6 +257,33 @@ def lyndenbellpringle1974(r, rc, p, Mdisk):
         Surface density profile"""
     return (2+p)*Mdisk / (2.*np.pi*rc**2) * (r/rc)**p * np.exp(-(r/rc)**(2+p))
 
+def tabone2022(r, rc, alpha_ss, alpha_dw, leverarm, Mdisk):
+
+    '''function that gives the self-similar gas surface density of a wind-driven disc (Tabone+2022);
+    
+    The function here assumes the power law exponent p is 1.
+
+    Parameters
+    ----------
+    r : float or array of floats
+        radial distance from star
+    rc : float
+        critical cutoff radius
+     Mdisk : float
+        gas disk mass
+    alpha_ss: float, 
+              parameterised viscous alpha
+    alpha_dw: float,
+              paraemterised wind alpha
+    leverarm: float, parameterised wind lever arm
+              determines how much gas is taken away for a given wind-driven stellar accretion rate
+    
+    '''
+    psi = alpha_dw/alpha_ss
+    ksi = 1/4* (psi+1.) * (np.sqrt(1.+4*psi/(leverarm-1.)*(psi+1.)**2)-1.)
+    gas_surf_wind = Mdisk/(2. * np.pi * rc**2)*(r/rc)**(-1.+ksi) * np.exp(-r/rc)
+    
+    return gas_surf_wind
 
 def mfp_midplane(sim):
     """Function calculates the midplane mean free path.

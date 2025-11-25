@@ -281,7 +281,7 @@ def tabone2022(r, rc, alpha_ss, alpha_dw, leverarm, Mdisk):
     '''
     if alpha_ss !=0:
         psi = alpha_dw/alpha_ss
-        ksi = 1/4* (psi+1.) * (np.sqrt(1.+4*psi/(leverarm-1.)*(psi+1.)**2)-1.)
+        ksi = 1/4* (psi+1.) * (np.sqrt(1.+4*psi/((leverarm-1.)*(psi+1.)**2))-1.)
     else:
         ksi = 1./(2*(leverarm-1.))
     

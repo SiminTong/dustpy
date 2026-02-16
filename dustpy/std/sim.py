@@ -1,5 +1,7 @@
 '''Module containing standard functions for the main simulation object.'''
 
+# (16/02/2026: modify dt to terminate the simulation once gas disk mass < 1e-5 initial gas disk mass)
+
 from dustpy import std
 
 import numpy as np
@@ -34,10 +36,18 @@ def dt(sim):
     -------
     dt : float
         Time step"""
+    
+    # add a criteria: if Mgas<1e-5 Mini, gas: terminate the simulation immediately.
 
-    dt_gas = std.gas.dt(sim) or 1.e100
-    dt_dust = std.dust.dt(sim) or 1.e100
-    dt = np.minimum(dt_gas, dt_dust)
+    Mgas = np.sum(2*np.pi * (sim.grid.ri[1:]-sim.grid.ri[:-1]) * sim.grid.r * sim.gas.Sigma) 
+
+    if Mgas < 1e-5 * sim.ini.gas.Mdisk:
+        dt = 1e100
+    else:
+        dt_gas = std.gas.dt(sim) or 1.e100
+        dt_dust = std.dust.dt(sim) or 1.e100
+        dt = np.minimum(dt_gas, dt_dust)
+    
     return sim.t.cfl * dt
 
 

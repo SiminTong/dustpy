@@ -37,11 +37,12 @@ def dt(sim):
     dt : float
         Time step"""
     
-    # add a criteria: if Mgas<1e-5 Mini, gas: terminate the simulation immediately.
+    # add a criteria: if Mgas<1e-2 Mini, gas: terminate the simulation immediately.
+    # but this part is not test currently!!!
 
     Mgas = np.sum(2*np.pi * (sim.grid.ri[1:]-sim.grid.ri[:-1]) * sim.grid.r * sim.gas.Sigma) 
 
-    if Mgas < 1e-5 * sim.ini.gas.Mdisk:
+    if Mgas < 1e-2 * sim.ini.gas.Mdisk:
         dt = 1e100
     else:
         dt_gas = std.gas.dt(sim) or 1.e100
